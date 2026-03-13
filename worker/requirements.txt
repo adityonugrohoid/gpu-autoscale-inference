@@ -1,0 +1,3 @@
+redis
+httpx
+python-dotenv
