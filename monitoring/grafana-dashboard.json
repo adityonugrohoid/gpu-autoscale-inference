@@ -13,7 +13,7 @@
       "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
       "targets": [
         {
-          "expr": "redis_list_length{key=\"inference_queue\"}",
+          "expr": "redis_key_size{key=\"inference_queue\"}",
           "legendFormat": "inference_queue",
           "refId": "A"
         }

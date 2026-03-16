@@ -35,7 +35,16 @@ else
   echo "KEDA already installed, skipping."
 fi
 
-# 5. Create namespace and apply manifests
+# 5. Install kube-state-metrics (for pod/node count Grafana panels)
+if ! kubectl get deployment kube-state-metrics -n kube-system &>/dev/null; then
+  echo "Installing kube-state-metrics..."
+  helm repo add prometheus-community https://prometheus-community.github.io/helm-charts 2>/dev/null || true
+  helm install kube-state-metrics prometheus-community/kube-state-metrics --namespace kube-system --wait
+else
+  echo "kube-state-metrics already installed, skipping."
+fi
+
+# 6. Create namespace and apply manifests
 echo "Applying Kubernetes manifests..."
 kubectl apply -f k8s/namespace.yaml
 kubectl apply -f k8s/ -n "$NAMESPACE"
