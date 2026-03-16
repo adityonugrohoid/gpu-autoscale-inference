@@ -1,0 +1,15 @@
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: vllm-autoscaler
+spec:
+  scaleTargetRef:
+    name: vllm
+  minReplicaCount: 0
+  maxReplicaCount: 1
+  triggers:
+    - type: redis
+      metadata:
+        address: redis.llm-gateway.svc.cluster.local:6379
+        listName: inference_queue
+        listLength: "5"
