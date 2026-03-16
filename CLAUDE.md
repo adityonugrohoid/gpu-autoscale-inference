@@ -253,6 +253,42 @@ gpu-autoscale-inference/
 - **Locust load tuning** — Qwen2.5-1.5B is fast (~100+ tok/s), so use 100+ concurrent users with long prompts to keep queue populated long enough for scaling to be visible in demo
 - **`job_queue.py` not `queue.py`** — avoids Python stdlib name collision
 
+## Phase 3 — Cold Start Optimization (next)
+
+**Goal:** Reduce cold start from ~9 min → ~1-2 min using two components.
+Full research and implementation plan: `docs/cold-start-optimization.md`
+
+### Component 1 — PV for Model Weights
+- Remove `vllm-custom/Dockerfile` (no more model baking)
+- vLLM image reverts to `vllm/vllm-openai:latest` (~8GB, unmodified)
+- Add `k8s/vllm-pvc.yaml` — 10GB PVC for model weights
+- Add `k8s/vllm-model-init-job.yaml` — one-time Job: `snapshot_download` → PVC
+- Patch `k8s/vllm-deployment.yaml` — mount PVC at `/root/.cache/huggingface`
+- PVC survives pod restarts and node deletion (GCP Persistent Disk)
+
+### Component 2 — GKE Secondary Boot Disk
+- Officially supported GKE feature (1.30.1+)
+- Build GCE disk image with vLLM layers pre-extracted into containerd's store
+- GPU nodes boot with disk attached → no image pull needed ("seconds, regardless of size")
+- Tool: `github.com/ai-on-gke/tools/tree/main/gke-disk-image-builder`
+- Disk: 20GB pd-standard, `--timeout=40m`, `--image-pull-auth=ServiceAccountToken`
+- Node pool flag: `--enable-image-streaming --secondary-boot-disk=disk-image=global/images/NAME,mode=CONTAINER_IMAGE_CACHE`
+- **Why not Image Streaming alone:** lazy remote IO kills Python/CUDA imports (tried, reverted). Secondary boot disk uses same plugin but reads from local pd-ssd — full speed.
+- Caveat: vLLM version change → rebuild disk image → recreate node pool
+
+### Cold Start Benchmarks (Phase 2)
+```
+Current (11GB baked image):          ~9 min  (confirmed across multiple runs)
+After PV only (8GB image):           ~6 min  (estimated)
+After PV + Secondary Boot Disk:      ~1-2 min (node provision + model load only)
+```
+
+Prometheus-confirmed breakdown (run 23:50:08, g2-standard-4 + L4, us-central1-a):
+- +0:30 — GPU node online
+- +8:50 — image pull complete (GPU power spike 17W → 33W)
+- +9:20 — model in VRAM (3.7GB → 18.4GB)
+- +9:30 — first tokens at ~9 tok/s
+
 ## v0.2 Scope (Do Not Build Now)
 
 - SSE token streaming
