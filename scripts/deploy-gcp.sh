@@ -35,6 +35,10 @@ echo "Building and pushing worker image..."
 docker build -t "${REGISTRY}/worker:latest" ./worker
 docker push "${REGISTRY}/worker:latest"
 
+echo "Building and pushing vLLM image (with model baked in)..."
+docker build -t "${REGISTRY}/vllm-openai:latest" ./vllm-custom
+docker push "${REGISTRY}/vllm-openai:latest"
+
 # 5. Create GKE cluster (if not exists)
 if gcloud container clusters describe "$CLUSTER" --zone "${REGION}-a" --project "$PROJECT" &>/dev/null; then
   echo "Cluster '$CLUSTER' already exists, skipping creation."
@@ -45,8 +49,8 @@ else
     --zone "${REGION}-a" \
     --num-nodes 1 \
     --machine-type e2-standard-2 \
-    --release-channel regular \
-    --enable-image-streaming \
+    --release-channel None \
+    --no-enable-autoupgrade \
     --enable-autoscaling --min-nodes 1 --max-nodes 2
 fi
 
@@ -100,6 +104,7 @@ kubectl apply -f k8s/ -n "$NAMESPACE"
 echo "Setting container images to Artifact Registry..."
 kubectl set image deployment/gateway gateway="${REGISTRY}/gateway:latest" -n "$NAMESPACE"
 kubectl set image deployment/worker worker="${REGISTRY}/worker:latest" -n "$NAMESPACE"
+kubectl set image deployment/vllm vllm="${REGISTRY}/vllm-openai:latest" -n "$NAMESPACE"
 
 # 11. Apply GCP GPU patch for vLLM
 echo "Applying GPU tolerations and nodeSelector to vLLM..."
