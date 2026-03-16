@@ -10,7 +10,7 @@
     {
       "title": "Queue Depth",
       "type": "timeseries",
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "gridPos": { "h": 8, "w": 6, "x": 0, "y": 0 },
       "targets": [
         {
           "expr": "redis_key_size{key=\"inference_queue\"}",
@@ -32,7 +32,7 @@
     {
       "title": "Worker Pod Count",
       "type": "timeseries",
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "gridPos": { "h": 8, "w": 6, "x": 6, "y": 0 },
       "targets": [
         {
           "expr": "kube_deployment_status_replicas{deployment=\"worker\"}",
@@ -59,7 +59,7 @@
     {
       "title": "Node Count",
       "type": "timeseries",
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "gridPos": { "h": 8, "w": 6, "x": 12, "y": 0 },
       "targets": [
         {
           "expr": "count(kube_node_info)",
@@ -87,7 +87,7 @@
     {
       "title": "GPU Utilization",
       "type": "timeseries",
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "gridPos": { "h": 8, "w": 6, "x": 18, "y": 0 },
       "targets": [
         {
           "expr": "DCGM_FI_DEV_GPU_UTIL",
@@ -105,7 +105,7 @@
     {
       "title": "Tokens/sec",
       "type": "timeseries",
-      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 16 },
+      "gridPos": { "h": 8, "w": 6, "x": 0, "y": 8 },
       "targets": [
         {
           "expr": "rate(vllm:generation_tokens_total[1m])",
@@ -123,7 +123,7 @@
     {
       "title": "Request Latency (p50 / p95)",
       "type": "timeseries",
-      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 16 },
+      "gridPos": { "h": 8, "w": 6, "x": 6, "y": 8 },
       "targets": [
         {
           "expr": "histogram_quantile(0.5, rate(http_request_duration_seconds_bucket[5m]))",
@@ -146,7 +146,7 @@
     {
       "title": "TTFT - Time to First Token",
       "type": "timeseries",
-      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 16 },
+      "gridPos": { "h": 8, "w": 6, "x": 12, "y": 8 },
       "targets": [
         {
           "expr": "histogram_quantile(0.95, rate(vllm:time_to_first_token_seconds_bucket[5m]))",
@@ -158,6 +158,24 @@
         "defaults": {
           "color": { "mode": "palette-classic" },
           "unit": "s"
+        }
+      }
+    },
+    {
+      "title": "GPU Memory Used",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 6, "x": 18, "y": 8 },
+      "targets": [
+        {
+          "expr": "DCGM_FI_DEV_FB_USED",
+          "legendFormat": "used MiB",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "unit": "decmbytes"
         }
       }
     }
