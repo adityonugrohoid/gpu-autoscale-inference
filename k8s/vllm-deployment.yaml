@@ -32,8 +32,9 @@ spec:
             httpGet:
               path: /health
               port: 8000
-            initialDelaySeconds: 10
+            initialDelaySeconds: 60
             periodSeconds: 10
+            failureThreshold: 30
           resources:
             limits:
               nvidia.com/gpu: 1

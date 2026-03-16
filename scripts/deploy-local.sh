@@ -40,11 +40,15 @@ echo "Applying Kubernetes manifests..."
 kubectl apply -f k8s/namespace.yaml
 kubectl apply -f k8s/ -n "$NAMESPACE"
 
-# 6. Apply monitoring stack
+# 6. Patch worker for Phase 1: vLLM runs on host, not in cluster
+echo "Patching worker VLLM_URL for local deployment..."
+kubectl set env deployment/worker VLLM_URL=http://host.docker.internal:8000 -n "$NAMESPACE"
+
+# 7. Apply monitoring stack
 echo "Deploying monitoring stack..."
 kubectl apply -f monitoring/prometheus.yaml -n "$NAMESPACE"
 
-# 7. Wait for rollout
+# 8. Wait for rollout
 echo "Waiting for Redis..."
 kubectl rollout status deployment/redis -n "$NAMESPACE" --timeout=60s
 
