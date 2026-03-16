@@ -49,6 +49,22 @@
 
 ---
 
+## v0.1 Phase 3 — Cold Start Optimization (next)
+
+**Goal:** Reduce cold start from ~9 min → ~1-2 min.
+See `docs/cold-start-optimization.md` for full research and benchmarks.
+
+- [ ] Remove `vllm-custom/Dockerfile` — stop baking model into image
+- [ ] `k8s/vllm-pvc.yaml` — 10GB PVC for Qwen2.5-1.5B weights (GCP pd-standard, ~$0.17/mo)
+- [ ] `k8s/vllm-model-init-job.yaml` — one-time Job to populate PVC via `snapshot_download`
+- [ ] Patch `k8s/vllm-deployment.yaml` — mount PVC at `/root/.cache/huggingface`
+- [ ] Update `scripts/deploy-gcp.sh` — run init Job, wait for completion before traffic
+- [ ] Build GKE Secondary Boot Disk image (tool: `gke-disk-image-builder`)
+- [ ] Update GPU node pool in `deploy-gcp.sh` to use `--secondary-boot-disk`
+- [ ] Verify cold start ≤ 2 min end-to-end on fresh cluster
+
+---
+
 ## v0.2 — Streaming + Multiplexing
 
 - [ ] SSE token streaming — `/generate/stream` endpoint
