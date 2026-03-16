@@ -1,9 +1,10 @@
 spec:
   template:
     spec:
+      enableServiceLinks: false
       tolerations:
         - key: "nvidia.com/gpu"
           operator: "Exists"
           effect: "NoSchedule"
       nodeSelector:
-        cloud.google.com/gke-accelerator: "nvidia-tesla-t4"
+        cloud.google.com/gke-accelerator: "nvidia-l4"

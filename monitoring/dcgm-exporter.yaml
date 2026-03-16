@@ -16,7 +16,7 @@ spec:
           operator: "Exists"
           effect: "NoSchedule"
       nodeSelector:
-        cloud.google.com/gke-accelerator: "nvidia-tesla-t4"
+        cloud.google.com/gke-accelerator: "nvidia-l4"
       containers:
         - name: dcgm-exporter
           image: nvcr.io/nvidia/k8s/dcgm-exporter:3.3.5-3.4.1-ubuntu22.04
@@ -25,13 +25,21 @@ spec:
               name: metrics
           securityContext:
             privileged: true
+          env:
+            - name: LD_LIBRARY_PATH
+              value: /usr/local/nvidia/lib64
           volumeMounts:
             - name: device-plugins
               mountPath: /var/lib/kubelet/device-plugins
+            - name: nvidia-install-dir-host
+              mountPath: /usr/local/nvidia
       volumes:
         - name: device-plugins
           hostPath:
             path: /var/lib/kubelet/device-plugins
+        - name: nvidia-install-dir-host
+          hostPath:
+            path: /home/kubernetes/bin/nvidia
 ---
 apiVersion: v1
 kind: Service
