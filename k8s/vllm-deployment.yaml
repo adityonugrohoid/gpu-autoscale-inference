@@ -26,6 +26,11 @@ spec:
           env:
             - name: MODEL_ID
               value: "Qwen/Qwen2.5-1.5B-Instruct"
+            - name: HF_HOME
+              value: /root/.cache/huggingface
+          volumeMounts:
+            - name: model-weights
+              mountPath: /root/.cache/huggingface
           ports:
             - containerPort: 8000
           readinessProbe:
@@ -38,3 +43,7 @@ spec:
           resources:
             limits:
               nvidia.com/gpu: 1
+      volumes:
+        - name: model-weights
+          persistentVolumeClaim:
+            claimName: vllm-model-weights
