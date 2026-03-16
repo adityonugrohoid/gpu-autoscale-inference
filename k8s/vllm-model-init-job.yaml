@@ -1,0 +1,34 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: vllm-model-init
+spec:
+  completions: 1
+  backoffLimit: 2
+  ttlSecondsAfterFinished: 86400
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: model-downloader
+          image: python:3.11-slim
+          command: ["sh", "-c"]
+          args:
+            - "pip install huggingface_hub -q && python3 -c \"from huggingface_hub import snapshot_download; snapshot_download('Qwen/Qwen2.5-1.5B-Instruct')\""
+          env:
+            - name: HF_HOME
+              value: /root/.cache/huggingface
+          volumeMounts:
+            - name: model-weights
+              mountPath: /root/.cache/huggingface
+          resources:
+            requests:
+              memory: "2Gi"
+              cpu: "1"
+            limits:
+              memory: "4Gi"
+              cpu: "2"
+      volumes:
+        - name: model-weights
+          persistentVolumeClaim:
+            claimName: vllm-model-weights

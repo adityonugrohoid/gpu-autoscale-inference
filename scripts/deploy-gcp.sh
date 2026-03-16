@@ -6,6 +6,7 @@ REGION="us-central1"
 CLUSTER="llm-gateway"
 NAMESPACE="llm-gateway"
 REGISTRY="us-docker.pkg.dev/${PROJECT}/llm-gateway"
+VLLM_DISK_IMAGE=""  # Set to GCE image name after running scripts/build-node-cache.sh
 
 echo "=== Phase 2: GCP GKE Deployment ==="
 
@@ -35,8 +36,9 @@ echo "Building and pushing worker image..."
 docker build -t "${REGISTRY}/worker:latest" ./worker
 docker push "${REGISTRY}/worker:latest"
 
-echo "Building and pushing vLLM image (with model baked in)..."
-docker build -t "${REGISTRY}/vllm-openai:latest" ./vllm-custom
+echo "Pushing vLLM base image to Artifact Registry..."
+docker pull vllm/vllm-openai:latest
+docker tag vllm/vllm-openai:latest "${REGISTRY}/vllm-openai:latest"
 docker push "${REGISTRY}/vllm-openai:latest"
 
 # 5. Create GKE cluster (if not exists)
@@ -59,6 +61,10 @@ if gcloud container node-pools describe gpu-pool --cluster "$CLUSTER" --zone "${
   echo "GPU node pool already exists, skipping creation."
 else
   echo "Creating GPU node pool (g2-standard-4 + L4, 0-1 nodes)..."
+  SECONDARY_BOOT_DISK_FLAG=""
+  if [ -n "${VLLM_DISK_IMAGE:-}" ]; then
+    SECONDARY_BOOT_DISK_FLAG="--enable-image-streaming --secondary-boot-disk=disk-image=global/images/${VLLM_DISK_IMAGE},mode=CONTAINER_IMAGE_CACHE"
+  fi
   gcloud container node-pools create gpu-pool \
     --cluster "$CLUSTER" \
     --project "$PROJECT" \
@@ -69,7 +75,8 @@ else
     --min-nodes 0 \
     --max-nodes 1 \
     --enable-autoscaling \
-    --node-taints="nvidia.com/gpu=present:NoSchedule"
+    --node-taints="nvidia.com/gpu=present:NoSchedule" \
+    ${SECONDARY_BOOT_DISK_FLAG}
 fi
 
 # 7. Get cluster credentials
@@ -100,13 +107,21 @@ echo "Applying Kubernetes manifests..."
 kubectl apply -f k8s/namespace.yaml
 kubectl apply -f k8s/ -n "$NAMESPACE"
 
-# 10. Set container images to Artifact Registry
+# 10. Apply PVC and model init job, wait for model download
+echo "Applying PVC and model init job..."
+kubectl apply -f k8s/vllm-pvc.yaml -n "$NAMESPACE"
+kubectl apply -f k8s/vllm-model-init-job.yaml -n "$NAMESPACE"
+echo "Waiting for model init job (downloads Qwen2.5-1.5B to PVC, ~5-7 min)..."
+kubectl wait --for=condition=complete job/vllm-model-init \
+  -n "$NAMESPACE" --timeout=600s
+
+# 11. Set container images to Artifact Registry
 echo "Setting container images to Artifact Registry..."
 kubectl set image deployment/gateway gateway="${REGISTRY}/gateway:latest" -n "$NAMESPACE"
 kubectl set image deployment/worker worker="${REGISTRY}/worker:latest" -n "$NAMESPACE"
 kubectl set image deployment/vllm vllm="${REGISTRY}/vllm-openai:latest" -n "$NAMESPACE"
 
-# 11. Apply GCP GPU patch for vLLM
+# 12. Apply GCP GPU patch for vLLM
 echo "Applying GPU tolerations and nodeSelector to vLLM..."
 kubectl patch deployment vllm -n "$NAMESPACE" --type=strategic --patch-file=k8s-cloud/gcp/vllm-gpu-patch.yaml
 
