@@ -22,9 +22,9 @@ gcloud artifacts repositories create llm-gateway \
   --location=us \
   --project="$PROJECT"
 
-# 3. Configure Docker auth for Artifact Registry
+# 3. Configure Docker auth for Artifact Registry (token-based for WSL2 compatibility)
 echo "Configuring Docker auth..."
-gcloud auth configure-docker us-docker.pkg.dev --quiet
+gcloud auth print-access-token | docker login -u oauth2accesstoken --password-stdin us-docker.pkg.dev
 
 # 4. Build and push images
 echo "Building and pushing gateway image..."
@@ -36,13 +36,13 @@ docker build -t "${REGISTRY}/worker:latest" ./worker
 docker push "${REGISTRY}/worker:latest"
 
 # 5. Create GKE cluster (if not exists)
-if gcloud container clusters describe "$CLUSTER" --region "$REGION" --project "$PROJECT" &>/dev/null; then
+if gcloud container clusters describe "$CLUSTER" --zone "${REGION}-a" --project "$PROJECT" &>/dev/null; then
   echo "Cluster '$CLUSTER' already exists, skipping creation."
 else
-  echo "Creating GKE cluster (1x e2-standard-2 CPU node)..."
+  echo "Creating GKE cluster (1x e2-standard-2 CPU node, single-zone)..."
   gcloud container clusters create "$CLUSTER" \
     --project "$PROJECT" \
-    --region "$REGION" \
+    --zone "${REGION}-a" \
     --num-nodes 1 \
     --machine-type e2-standard-2 \
     --release-channel regular \
@@ -50,17 +50,16 @@ else
 fi
 
 # 6. Create GPU node pool (if not exists)
-if gcloud container node-pools describe gpu-pool --cluster "$CLUSTER" --region "$REGION" --project "$PROJECT" &>/dev/null; then
+if gcloud container node-pools describe gpu-pool --cluster "$CLUSTER" --zone "${REGION}-a" --project "$PROJECT" &>/dev/null; then
   echo "GPU node pool already exists, skipping creation."
 else
-  echo "Creating GPU node pool (n1-standard-4 + T4, spot, 0-1 nodes)..."
+  echo "Creating GPU node pool (g2-standard-4 + L4, 0-1 nodes)..."
   gcloud container node-pools create gpu-pool \
     --cluster "$CLUSTER" \
     --project "$PROJECT" \
-    --region "$REGION" \
-    --machine-type n1-standard-4 \
-    --accelerator type=nvidia-tesla-t4,count=1 \
-    --spot \
+    --zone "${REGION}-a" \
+    --machine-type g2-standard-4 \
+    --accelerator type=nvidia-l4,count=1 \
     --num-nodes 0 \
     --min-nodes 0 \
     --max-nodes 1 \
@@ -70,7 +69,7 @@ fi
 
 # 7. Get cluster credentials
 echo "Fetching cluster credentials..."
-gcloud container clusters get-credentials "$CLUSTER" --region "$REGION" --project "$PROJECT"
+gcloud container clusters get-credentials "$CLUSTER" --zone "${REGION}-a" --project "$PROJECT"
 
 # 8. Install KEDA (if not already installed)
 if ! kubectl get namespace keda &>/dev/null; then
@@ -141,5 +140,5 @@ echo "      -H 'Content-Type: application/json' \\"
 echo "      -d '{\"prompt\":\"Explain autoscaling\"}' &"
 echo "  done"
 echo ""
-echo "WARNING: GKE control plane costs ~\$0.10/hr + GPU node ~\$0.15/hr (spot)."
+echo "WARNING: GKE control plane costs ~\$0.10/hr + GPU node (L4) ~\$0.70/hr."
 echo "ALWAYS tear down after session: ./scripts/destroy-gcp.sh"

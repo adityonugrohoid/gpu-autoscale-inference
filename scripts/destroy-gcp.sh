@@ -10,7 +10,7 @@ echo "=== Destroying GCP GKE Resources ==="
 # 1. Delete GKE cluster
 echo "Deleting GKE cluster '$CLUSTER'..."
 gcloud container clusters delete "$CLUSTER" \
-  --region "$REGION" \
+  --zone "${REGION}-a" \
   --project "$PROJECT" \
   --quiet
 
