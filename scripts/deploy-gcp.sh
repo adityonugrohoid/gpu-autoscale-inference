@@ -6,7 +6,7 @@ REGION="us-central1"
 CLUSTER="llm-gateway"
 NAMESPACE="llm-gateway"
 REGISTRY="us-docker.pkg.dev/${PROJECT}/llm-gateway"
-VLLM_DISK_IMAGE=""  # Set to GCE image name after running scripts/build-node-cache.sh
+VLLM_DISK_IMAGE="vllm-node-cache-20260317"
 
 echo "=== Phase 2: GCP GKE Deployment ==="
 

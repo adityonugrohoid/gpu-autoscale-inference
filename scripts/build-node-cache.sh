@@ -8,11 +8,13 @@ PROJECT="sonorous-reach-438808-c6"
 REGION="us-central1"
 REGISTRY="us-docker.pkg.dev/${PROJECT}/llm-gateway"
 DISK_NAME="vllm-node-cache-$(date +%Y%m%d)"
-DISK_SIZE_GB=20
+DISK_SIZE_GB=50
 LOG_BUCKET="gs://${PROJECT}-node-cache-logs"
 
 # 1. Check Go >= 1.21 (required by gke-disk-image-builder)
 echo "Checking Go version..."
+# Add common non-standard Go install locations to PATH
+export PATH="$HOME/go-install/go/bin:/usr/local/go/bin:$PATH"
 if ! command -v go &>/dev/null; then
   echo "ERROR: Go not found. Install Go >= 1.21: https://go.dev/dl/"
   exit 1
@@ -50,7 +52,8 @@ cd gke-disk-image-builder
 
 # 5. Build the disk image
 echo "Building GCE disk image ${DISK_NAME} (~40 min)..."
-go run . \
+go mod tidy
+go run ./cli \
   --project-name="$PROJECT" \
   --image-name="$DISK_NAME" \
   --zone="${REGION}-a" \
