@@ -50,7 +50,7 @@ The architecture mirrors inference platforms used by OpenAI, Anthropic, and Goog
 | Pod Autoscaler | KEDA |
 | Node Autoscaler | Cluster Autoscaler (AKS / GKE) |
 | Queue Consumer | Python worker |
-| Inference Engine | vLLM + Mistral-7B-Instruct-v0.2 |
+| Inference Engine | vLLM + Qwen/Qwen2.5-1.5B-Instruct |
 | Orchestration | Kubernetes |
 | Observability | Prometheus + Grafana + dcgm-exporter |
 | Load Testing | Locust |
@@ -100,7 +100,8 @@ graph TD
 ```bash
 # 1. Start vLLM on host (uses local GPU directly)
 docker run --gpus all -p 8000:8000 --ipc=host \
-  vllm/vllm-openai --model mistralai/Mistral-7B-Instruct-v0.2
+  vllm/vllm-openai --model Qwen/Qwen2.5-1.5B-Instruct \
+  --max-model-len 4096 --gpu-memory-utilization 0.8 --enforce-eager
 
 # 2. Create local k3d cluster
 k3d cluster create llm-gateway --port "8080:80@loadbalancer"
@@ -160,7 +161,7 @@ Queue depth > 5
 → KEDA scales Worker (0→1) + vLLM (0→1)
 → vLLM pod requests nvidia.com/gpu: 1
 → [cloud] Cluster Autoscaler provisions GPU node
-→ vLLM loads model (~30–60s), readiness probe passes
+→ vLLM loads model (~5-10s), readiness probe passes
 → Worker pulls jobs, calls vLLM, writes results
 → Queue drains → KEDA scales to 0 → GPU node removed
 ```

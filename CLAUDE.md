@@ -24,7 +24,7 @@ Result: no requests → no pods → no GPU node → $0/hr.
 | Pod Autoscaler | KEDA |
 | Node Autoscaler (cloud) | Cluster Autoscaler |
 | Queue Consumer | custom Python worker |
-| Inference Engine | vLLM (Mistral-7B-Instruct-v0.2 Q4) |
+| Inference Engine | vLLM (Qwen/Qwen2.5-1.5B-Instruct) |
 | Orchestration | Kubernetes (raw Deployment + Service) |
 | Observability | Prometheus + Grafana + NVIDIA dcgm-exporter |
 | Load Testing | Locust |
@@ -45,7 +45,7 @@ API Gateway (FastAPI)  →  POST /generate  →  enqueue job  →  return {job_i
                                                   │
                               [cloud] Cluster Autoscaler provisions GPU node
                                                   │
-                              vLLM loads Mistral-7B Q4 (~30–60s)
+                              vLLM loads Qwen2.5-1.5B (~5-10s)
                               readiness probe passes
                                                   │
                               Worker pulls job → POSTs to vLLM → writes result
@@ -91,9 +91,10 @@ All requests are fully async — `/generate` always returns a `job_id`, never bl
 
 - `job_queue.py` — Redis helpers (NOT `queue.py` — name collision with Python stdlib)
 - `VLLM_URL` — environment variable in worker: `http://host.docker.internal:8000` (Phase 1) or `http://vllm:8000` (Phase 2)
-- `wait_for_vllm()` in worker — retry loop on `/health` endpoint, handles the 30–60s model load delay
+- `MODEL_ID` — environment variable in worker + vLLM deployment: `Qwen/Qwen2.5-1.5B-Instruct` (model-agnostic, swappable)
+- `wait_for_vllm()` in worker — retry loop on `/health` endpoint, handles model load delay
 - Result store TTL: 5 minutes — failed jobs write `{status: error}`, never leave key empty
-- vLLM readiness probe: `httpGet /health`, `initialDelaySeconds: 30`, `periodSeconds: 10`
+- vLLM readiness probe: `httpGet /health`, `initialDelaySeconds: 10`, `periodSeconds: 10`
 
 ## Development Phases
 
@@ -104,7 +105,8 @@ vLLM runs on the **host in Docker** (not inside k3d). Everything else runs insid
 ```bash
 # Start vLLM on host (uses local 8GB GPU)
 docker run --gpus all -p 8000:8000 --ipc=host \
-  vllm/vllm-openai --model mistralai/Mistral-7B-Instruct-v0.2
+  vllm/vllm-openai --model Qwen/Qwen2.5-1.5B-Instruct \
+  --max-model-len 4096 --gpu-memory-utilization 0.8 --enforce-eager
 
 # Start k3d cluster
 k3d cluster create llm-gateway --port "8080:80@loadbalancer"
@@ -126,17 +128,20 @@ Phase 1 Grafana will show empty GPU utilization/TTFT panels — expected, dcgm-e
 
 Same manifests, different config. Apply cloud-specific patches from `k8s-cloud/`.
 
-**Primary: Azure AKS** (credits available now, GPU quota auto-approved on new accounts)
+**Primary: GCP GKE Standard** (T4 + L4 quota already approved all regions, preemptible ~$0.15/hr)
+
+- GCP project: `sonorous-reach-438808-c6`
+- One-time prereq: `gcloud services enable container.googleapis.com`
 
 ```bash
-# Create AKS cluster + GPU node pool
-./scripts/deploy-azure.sh
+# Create GKE cluster + GPU node pool
+./scripts/deploy-gcp.sh
 
 # Apply base manifests
 kubectl apply -f k8s/
 
-# Apply Azure GPU tolerations
-kubectl apply -f k8s-cloud/azure/
+# Apply GCP GPU tolerations
+kubectl apply -f k8s-cloud/gcp/
 
 # Verify GPU node scaling
 kubectl get nodes -w
@@ -145,18 +150,18 @@ kubectl get nodes -w
 GATEWAY_IP=$(kubectl get svc gateway -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
 locust -f loadtest/locustfile.py --host http://$GATEWAY_IP
 
-# ALWAYS tear down after session
-./scripts/destroy-azure.sh
+# ALWAYS tear down after session (GKE control plane ~$0.10/hr)
+./scripts/destroy-gcp.sh
 ```
 
-**Alt: GCP GKE Standard** (pending $300 credits — swap azure → gcp scripts if credits land first)
+**Alt: Azure AKS** (credits available, GPU quota auto-approved on new accounts, ~$0.52/hr)
 
 ```bash
-./scripts/deploy-gcp.sh
+./scripts/deploy-azure.sh
 kubectl apply -f k8s/
-kubectl apply -f k8s-cloud/gcp/
+kubectl apply -f k8s-cloud/azure/
 # ... same flow
-./scripts/destroy-gcp.sh
+./scripts/destroy-azure.sh
 ```
 
 **AWS EKS blocked** — GPU quota not approved (needs billing history). Revisit later.
@@ -243,8 +248,9 @@ gpu-autoscale-inference/
 - **All requests async** — no inline sync path; `/generate` always returns `job_id`
 - **No KServe** — plain K8s Deployment + Service is sufficient; KServe adds Istio/Knative complexity
 - **No Ollama** — single vLLM runtime; consistent API surface, stronger portfolio signal
-- **Mistral-7B-Instruct-v0.2 Q4** — chosen for ~30–60s cold start on T4 (faster demo than Llama-3-8B)
+- **Qwen2.5-1.5B** (`Qwen/Qwen2.5-1.5B-Instruct`) — small footprint (~3.5GB VRAM), cold start (~5-10s), ungated, Alibaba/Qwen — top-5 on open model leaderboards, well-known in ML engineering. Platform is model-agnostic via `MODEL_ID` env var. **vLLM startup flags for 8GB VRAM:** `--max-model-len 4096 --gpu-memory-utilization 0.8 --enforce-eager`
 - **2 workers : 1 vLLM** — workers share vLLM over HTTP; vLLM handles concurrency natively
+- **Locust load tuning** — Qwen2.5-1.5B is fast (~100+ tok/s), so use 100+ concurrent users with long prompts to keep queue populated long enough for scaling to be visible in demo
 - **`job_queue.py` not `queue.py`** — avoids Python stdlib name collision
 
 ## v0.2 Scope (Do Not Build Now)
