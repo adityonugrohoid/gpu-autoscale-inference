@@ -21,10 +21,7 @@
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "palette-classic" },
-          "custom": {
-            "lineWidth": 2,
-            "fillOpacity": 20
-          },
+          "custom": { "lineWidth": 2, "fillOpacity": 20 },
           "unit": "short"
         }
       }
@@ -48,10 +45,7 @@
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "palette-classic" },
-          "custom": {
-            "lineWidth": 2,
-            "fillOpacity": 10
-          },
+          "custom": { "lineWidth": 2, "fillOpacity": 10 },
           "unit": "short"
         }
       }
@@ -75,10 +69,7 @@
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "palette-classic" },
-          "custom": {
-            "lineWidth": 2,
-            "fillOpacity": 10
-          },
+          "custom": { "lineWidth": 2, "fillOpacity": 10 },
           "unit": "short",
           "decimals": 0
         }
@@ -103,9 +94,83 @@
       }
     },
     {
-      "title": "Tokens/sec",
+      "title": "vLLM Running Requests",
       "type": "timeseries",
       "gridPos": { "h": 8, "w": 6, "x": 0, "y": 8 },
+      "targets": [
+        {
+          "expr": "vllm:num_requests_running",
+          "legendFormat": "running",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": { "lineWidth": 2, "fillOpacity": 10 },
+          "unit": "short"
+        }
+      }
+    },
+    {
+      "title": "vLLM Waiting Requests",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 6, "x": 6, "y": 8 },
+      "targets": [
+        {
+          "expr": "vllm:num_requests_waiting",
+          "legendFormat": "waiting",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": { "lineWidth": 2, "fillOpacity": 10 },
+          "unit": "short"
+        }
+      }
+    },
+    {
+      "title": "KV Cache Usage",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 6, "x": 12, "y": 8 },
+      "targets": [
+        {
+          "expr": "vllm:gpu_cache_usage_perc",
+          "legendFormat": "gpu cache %",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "unit": "percentunit"
+        }
+      }
+    },
+    {
+      "title": "GPU Power Draw",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 6, "x": 18, "y": 8 },
+      "targets": [
+        {
+          "expr": "DCGM_FI_DEV_POWER_USAGE",
+          "legendFormat": "watts",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "unit": "watt"
+        }
+      }
+    },
+    {
+      "title": "Tokens/sec",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 6, "x": 0, "y": 16 },
       "targets": [
         {
           "expr": "rate(vllm:generation_tokens_total[1m])",
@@ -123,7 +188,7 @@
     {
       "title": "Request Latency (p50 / p95)",
       "type": "timeseries",
-      "gridPos": { "h": 8, "w": 6, "x": 6, "y": 8 },
+      "gridPos": { "h": 8, "w": 6, "x": 6, "y": 16 },
       "targets": [
         {
           "expr": "histogram_quantile(0.5, rate(http_request_duration_seconds_bucket[5m]))",
@@ -146,7 +211,7 @@
     {
       "title": "TTFT - Time to First Token",
       "type": "timeseries",
-      "gridPos": { "h": 8, "w": 6, "x": 12, "y": 8 },
+      "gridPos": { "h": 8, "w": 6, "x": 12, "y": 16 },
       "targets": [
         {
           "expr": "histogram_quantile(0.95, rate(vllm:time_to_first_token_seconds_bucket[5m]))",
@@ -164,7 +229,7 @@
     {
       "title": "GPU Memory Used",
       "type": "timeseries",
-      "gridPos": { "h": 8, "w": 6, "x": 18, "y": 8 },
+      "gridPos": { "h": 8, "w": 6, "x": 18, "y": 16 },
       "targets": [
         {
           "expr": "DCGM_FI_DEV_FB_USED",
