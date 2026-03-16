@@ -12,6 +12,14 @@ data:
         static_configs:
           - targets: ["redis:9121"]
 
+      - job_name: "dcgm-exporter"
+        static_configs:
+          - targets: ["dcgm-exporter:9400"]
+
+      - job_name: "vllm"
+        static_configs:
+          - targets: ["vllm:8000"]
+
       - job_name: "kubernetes-pods"
         kubernetes_sd_configs:
           - role: pod
