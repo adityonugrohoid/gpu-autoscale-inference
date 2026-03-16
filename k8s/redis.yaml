@@ -24,6 +24,8 @@ spec:
           env:
             - name: REDIS_ADDR
               value: "redis://localhost:6379"
+            - name: REDIS_EXPORTER_CHECK_KEYS
+              value: "inference_queue"
 ---
 apiVersion: v1
 kind: Service

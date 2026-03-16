@@ -20,6 +20,10 @@ data:
         static_configs:
           - targets: ["vllm:8000"]
 
+      - job_name: "kube-state-metrics"
+        static_configs:
+          - targets: ["kube-state-metrics.kube-system:8080"]
+
       - job_name: "kubernetes-pods"
         kubernetes_sd_configs:
           - role: pod
@@ -151,7 +155,7 @@ data:
           "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
           "targets": [
             {
-              "expr": "redis_list_length{key=\"inference_queue\"}",
+              "expr": "redis_key_size{key=\"inference_queue\"}",
               "legendFormat": "inference_queue",
               "refId": "A"
             }
