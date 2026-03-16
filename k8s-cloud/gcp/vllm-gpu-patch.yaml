@@ -1,0 +1,9 @@
+spec:
+  template:
+    spec:
+      tolerations:
+        - key: "nvidia.com/gpu"
+          operator: "Exists"
+          effect: "NoSchedule"
+      nodeSelector:
+        cloud.google.com/gke-accelerator: "nvidia-tesla-t4"
