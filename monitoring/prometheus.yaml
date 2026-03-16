@@ -139,7 +139,164 @@ metadata:
 data:
   llm-gateway.json: |
     {
-      "dashboard": null
+      "annotations": { "list": [] },
+      "editable": true,
+      "fiscalYearStartMonth": 0,
+      "graphTooltip": 1,
+      "links": [],
+      "panels": [
+        {
+          "title": "Queue Depth",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+          "targets": [
+            {
+              "expr": "redis_list_length{key=\"inference_queue\"}",
+              "legendFormat": "inference_queue",
+              "refId": "A"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "palette-classic" },
+              "custom": { "lineWidth": 2, "fillOpacity": 20 },
+              "unit": "short"
+            }
+          }
+        },
+        {
+          "title": "Worker Pod Count",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+          "targets": [
+            {
+              "expr": "kube_deployment_status_replicas{deployment=\"worker\"}",
+              "legendFormat": "worker replicas",
+              "refId": "A"
+            },
+            {
+              "expr": "kube_deployment_status_replicas{deployment=\"vllm\"}",
+              "legendFormat": "vllm replicas",
+              "refId": "B"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "palette-classic" },
+              "custom": { "lineWidth": 2, "fillOpacity": 10 },
+              "unit": "short"
+            }
+          }
+        },
+        {
+          "title": "Request Latency (p50 / p95)",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+          "targets": [
+            {
+              "expr": "histogram_quantile(0.5, rate(http_request_duration_seconds_bucket[5m]))",
+              "legendFormat": "p50",
+              "refId": "A"
+            },
+            {
+              "expr": "histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m]))",
+              "legendFormat": "p95",
+              "refId": "B"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "palette-classic" },
+              "unit": "s"
+            }
+          }
+        },
+        {
+          "title": "Tokens/sec",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+          "targets": [
+            {
+              "expr": "rate(vllm_generation_tokens_total[1m])",
+              "legendFormat": "tokens/sec",
+              "refId": "A"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "palette-classic" },
+              "unit": "short"
+            }
+          }
+        },
+        {
+          "title": "GPU Utilization",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 },
+          "targets": [
+            {
+              "expr": "DCGM_FI_DEV_GPU_UTIL",
+              "legendFormat": "{{gpu}}",
+              "refId": "A"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "palette-classic" },
+              "unit": "percent"
+            }
+          }
+        },
+        {
+          "title": "TTFT - Time to First Token",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 16 },
+          "targets": [
+            {
+              "expr": "histogram_quantile(0.95, rate(vllm_time_to_first_token_seconds_bucket[5m]))",
+              "legendFormat": "p95 TTFT",
+              "refId": "A"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "palette-classic" },
+              "unit": "s"
+            }
+          }
+        },
+        {
+          "title": "Node Count",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 24 },
+          "targets": [
+            {
+              "expr": "count(kube_node_info)",
+              "legendFormat": "total nodes",
+              "refId": "A"
+            },
+            {
+              "expr": "count(kube_node_status_capacity{resource=\"nvidia_com_gpu\"} > 0)",
+              "legendFormat": "GPU nodes",
+              "refId": "B"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "palette-classic" },
+              "custom": { "lineWidth": 2, "fillOpacity": 10 },
+              "unit": "short",
+              "decimals": 0
+            }
+          }
+        }
+      ],
+      "schemaVersion": 39,
+      "tags": ["llm", "inference", "gpu"],
+      "templating": { "list": [] },
+      "time": { "from": "now-30m", "to": "now" },
+      "title": "LLM Gateway",
+      "uid": "llm-gateway"
     }
 ---
 apiVersion: apps/v1
