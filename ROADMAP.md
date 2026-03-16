@@ -1,43 +1,41 @@
 # gpu-autoscale-inference Roadmap
 
-## v0.1 Phase 1 — Local GPU Prototype (active)
+## v0.1 Phase 1 — Local GPU Prototype (complete)
 
 **Goal:** full end-to-end request flow working locally with real inference. All K8s manifests finalized and tested on k3d.
 
-- [ ] `gateway/main.py` — FastAPI: POST /generate + GET /result/{job_id} + GET /health
-- [ ] `gateway/job_queue.py` — Redis enqueue + result store helpers (TTL 5min, error result on failure)
-- [ ] `worker/worker.py` — blocking queue consumer, VLLM_URL from env, wait_for_vllm(), writes results
-- [ ] `k8s/namespace.yaml`
-- [ ] `k8s/redis.yaml`
-- [ ] `k8s/gateway-deployment.yaml` + `k8s/gateway-service.yaml` (NodePort for local)
-- [ ] `k8s/vllm-deployment.yaml` (replicas: 0, readinessProbe) + `k8s/vllm-service.yaml` (ClusterIP)
-- [ ] `k8s/worker-deployment.yaml` (replicas: 0)
-- [ ] `k8s/vllm-keda-scaledobject.yaml` (max: 1, queue threshold: 5)
-- [ ] `k8s/worker-keda-scaledobject.yaml` (max: 2, queue threshold: 5)
-- [ ] `monitoring/prometheus.yaml` + `monitoring/grafana-dashboard.json`
-- [ ] `loadtest/locustfile.py` — POST /generate + poll /result until done (100+ users, long prompts — Qwen2.5-1.5B drains fast)
-- [ ] `scripts/deploy-local.sh` + `scripts/destroy-local.sh`
-- [ ] Verify KEDA pod scaling 0→1→0 under Locust load on k3d
-- [ ] Grafana showing queue depth, latency, tokens/sec, pod count
+- [x] `gateway/main.py` — FastAPI: POST /generate + GET /result/{job_id} + GET /health
+- [x] `gateway/job_queue.py` — Redis enqueue + result store helpers (TTL 5min, error result on failure)
+- [x] `worker/worker.py` — blocking queue consumer, VLLM_URL from env, wait_for_vllm(), writes results
+- [x] `k8s/namespace.yaml`
+- [x] `k8s/redis.yaml`
+- [x] `k8s/gateway-deployment.yaml` + `k8s/gateway-service.yaml` (LoadBalancer)
+- [x] `k8s/vllm-deployment.yaml` (replicas: 0, readinessProbe) + `k8s/vllm-service.yaml` (ClusterIP)
+- [x] `k8s/worker-deployment.yaml` (replicas: 0)
+- [x] `k8s/vllm-keda-scaledobject.yaml` (max: 1, queue threshold: 5)
+- [x] `k8s/worker-keda-scaledobject.yaml` (max: 2, queue threshold: 5)
+- [x] `monitoring/prometheus.yaml` + `monitoring/grafana-dashboard.json`
+- [x] `loadtest/locustfile.py` — POST /generate + poll /result until done (100+ users, long prompts — Qwen2.5-1.5B drains fast)
+- [x] `scripts/deploy-local.sh` + `scripts/destroy-local.sh`
+- [x] Verify KEDA pod scaling 0→1→0 under Locust load on k3d
+- [x] Grafana showing queue depth, latency, tokens/sec, pod count
 
 ---
 
-## v0.1 Phase 2 — Cloud GPU Deployment (after Phase 1 complete)
+## v0.1 Phase 2 — Cloud GPU Deployment (active — GCP GKE)
 
 **Goal:** full two-layer autoscaling demo (KEDA pods + Cluster Autoscaler nodes). Portfolio-grade demo recording.
 
-**Primary platform: Azure AKS** (credits available). Switch to GCP GKE if credits land first.
+**Primary platform: GCP GKE** (T4 + L4 quota approved, preemptible ~$0.15/hr).
 
-- [ ] `k8s-cloud/azure/nodepool.yaml` — NC4as_T4_v3 GPU node pool, Cluster Autoscaler annotations
-- [ ] `k8s-cloud/azure/gpu-tolerations-patch.yaml`
-- [ ] `k8s-cloud/gcp/nodepool.yaml` — n1-standard-4 + T4, Cluster Autoscaler config
-- [ ] `k8s-cloud/gcp/gpu-tolerations-patch.yaml`
-- [ ] `scripts/deploy-azure.sh` + `scripts/destroy-azure.sh`
-- [ ] `scripts/deploy-gcp.sh` + `scripts/destroy-gcp.sh`
-- [ ] `gateway-service.yaml` updated to LoadBalancer type for cloud
-- [ ] dcgm-exporter deployed — GPU utilization, TTFT active in Grafana
-- [ ] Demo recording: idle (0 pods, 0 GPU nodes) → Locust (100+ users, long prompts) → node provisions → inference → scale-to-zero (~6–8 min cycle with Qwen2.5-1.5B)
-- [ ] `README.md` — architecture diagram (mermaid) + demo GIF/video embed
+- [x] `k8s-cloud/gcp/vllm-gpu-patch.yaml` — GPU tolerations + nodeSelector (strategic merge patch)
+- [x] `scripts/deploy-gcp.sh` + `scripts/destroy-gcp.sh`
+- [x] `gateway-service.yaml` updated to LoadBalancer type for cloud
+- [x] `monitoring/dcgm-exporter.yaml` — GPU metrics DaemonSet on GPU nodes
+- [x] Prometheus scrape jobs for dcgm-exporter + vLLM metrics
+- [x] Grafana Node Count panel (total + GPU nodes)
+- [ ] Demo recording: idle (0 pods, 0 GPU nodes) → Locust (100+ users, long prompts) → node provisions → inference → scale-to-zero (~6-8 min cycle with Qwen2.5-1.5B)
+- [ ] `README.md` — demo GIF/video embed
 
 ---
 
