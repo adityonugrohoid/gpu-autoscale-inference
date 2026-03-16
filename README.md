@@ -118,13 +118,35 @@ source .venv/bin/activate
 locust -f loadtest/locustfile.py --host http://localhost:8080
 ```
 
-### Phase 2 — Cloud (Azure AKS)
+### Phase 2 — Cloud (GCP GKE)
 
 ```bash
-./scripts/deploy-azure.sh
-kubectl apply -f k8s/
-kubectl apply -f k8s-cloud/azure/
-./scripts/destroy-azure.sh   # always run after session
+# Deploy: creates GKE cluster, GPU node pool (T4 spot), pushes images, applies manifests
+./scripts/deploy-gcp.sh
+
+# Get gateway IP
+GATEWAY_IP=$(kubectl get svc gateway -n llm-gateway -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+curl http://$GATEWAY_IP/health
+
+# Trigger scaling (6+ requests to exceed KEDA threshold)
+for i in $(seq 1 6); do
+  curl -s -X POST http://$GATEWAY_IP/generate \
+    -H 'Content-Type: application/json' \
+    -d '{"prompt":"Explain autoscaling"}' &
+done
+
+# Watch two-layer scaling
+kubectl get nodes -w                    # GPU node appears (~2-4 min)
+kubectl get pods -n llm-gateway -w      # vLLM + worker go Pending -> Running
+
+# Load test
+locust -f loadtest/locustfile.py --host http://$GATEWAY_IP
+
+# Monitoring
+kubectl port-forward svc/grafana 3000:3000 -n llm-gateway
+
+# ALWAYS tear down after session (~$0.10/hr control plane + ~$0.15/hr GPU spot)
+./scripts/destroy-gcp.sh
 ```
 
 ### Configuration
@@ -196,8 +218,8 @@ gpu-autoscale-inference/
 See [ROADMAP.md](ROADMAP.md) for detailed version history and plans.
 
 - [x] Repository scaffolded
-- [ ] v0.1 Phase 1 — Local GPU prototype (k3d)
-- [ ] v0.1 Phase 2 — Cloud GPU deployment (AKS/GKE), demo recording
+- [x] v0.1 Phase 1 — Local GPU prototype (k3d)
+- [x] v0.1 Phase 2 — Cloud GPU deployment (GCP GKE)
 - [ ] v0.2 — SSE streaming, model multiplexing
 
 ## Author
