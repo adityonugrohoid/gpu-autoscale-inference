@@ -85,7 +85,7 @@
       "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
       "targets": [
         {
-          "expr": "rate(vllm_generation_tokens_total[1m])",
+          "expr": "rate(vllm:generation_tokens_total[1m])",
           "legendFormat": "tokens/sec",
           "refId": "A"
         }
@@ -121,7 +121,7 @@
       "gridPos": { "h": 8, "w": 12, "x": 12, "y": 16 },
       "targets": [
         {
-          "expr": "histogram_quantile(0.95, rate(vllm_time_to_first_token_seconds_bucket[5m]))",
+          "expr": "histogram_quantile(0.95, rate(vllm:time_to_first_token_seconds_bucket[5m]))",
           "legendFormat": "p95 TTFT",
           "refId": "A"
         }

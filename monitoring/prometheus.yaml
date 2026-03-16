@@ -221,7 +221,7 @@ data:
           "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
           "targets": [
             {
-              "expr": "rate(vllm_generation_tokens_total[1m])",
+              "expr": "rate(vllm:generation_tokens_total[1m])",
               "legendFormat": "tokens/sec",
               "refId": "A"
             }
@@ -257,7 +257,7 @@ data:
           "gridPos": { "h": 8, "w": 12, "x": 12, "y": 16 },
           "targets": [
             {
-              "expr": "histogram_quantile(0.95, rate(vllm_time_to_first_token_seconds_bucket[5m]))",
+              "expr": "histogram_quantile(0.95, rate(vllm:time_to_first_token_seconds_bucket[5m]))",
               "legendFormat": "p95 TTFT",
               "refId": "A"
             }
@@ -329,6 +329,10 @@ spec:
               value: "true"
             - name: GF_AUTH_ANONYMOUS_ORG_ROLE
               value: "Viewer"
+            - name: GF_RENDERING_SERVER_URL
+              value: "http://localhost:8081/render"
+            - name: GF_RENDERING_CALLBACK_URL
+              value: "http://localhost:3000/"
           volumeMounts:
             - name: datasources
               mountPath: /etc/grafana/provisioning/datasources
@@ -336,6 +340,10 @@ spec:
               mountPath: /etc/grafana/provisioning/dashboards
             - name: dashboards
               mountPath: /var/lib/grafana/dashboards
+        - name: renderer
+          image: grafana/grafana-image-renderer:latest
+          ports:
+            - containerPort: 8081
       volumes:
         - name: datasources
           configMap:
