@@ -15,13 +15,13 @@ spec:
       containers:
         - name: worker
           image: worker:local
-          imagePullPolicy: Never
+          imagePullPolicy: IfNotPresent
           env:
             - name: REDIS_HOST
               value: "redis"
             - name: REDIS_PORT
               value: "6379"
             - name: VLLM_URL
-              value: "http://host.docker.internal:8000"
+              value: "http://vllm:8000"
             - name: MODEL_ID
               value: "Qwen/Qwen2.5-1.5B-Instruct"

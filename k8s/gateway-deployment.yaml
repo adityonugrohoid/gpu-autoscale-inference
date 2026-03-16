@@ -15,7 +15,7 @@ spec:
       containers:
         - name: gateway
           image: gateway:local
-          imagePullPolicy: Never
+          imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8000
           env:
