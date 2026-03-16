@@ -46,6 +46,7 @@ else
     --num-nodes 1 \
     --machine-type e2-standard-2 \
     --release-channel regular \
+    --enable-image-streaming \
     --enable-autoscaling --min-nodes 1 --max-nodes 2
 fi
 
