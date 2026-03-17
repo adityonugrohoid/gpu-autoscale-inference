@@ -137,7 +137,7 @@
       "gridPos": { "h": 8, "w": 6, "x": 12, "y": 8 },
       "targets": [
         {
-          "expr": "vllm:gpu_cache_usage_perc",
+          "expr": "vllm:kv_cache_usage_perc",
           "legendFormat": "gpu cache %",
           "refId": "A"
         }
