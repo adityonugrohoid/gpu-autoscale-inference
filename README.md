@@ -183,7 +183,8 @@ Queue depth > 5
 → KEDA scales Worker (0→1) + vLLM (0→1)
 → vLLM pod requests nvidia.com/gpu: 1
 → [cloud] Cluster Autoscaler provisions GPU node
-→ vLLM loads model (~5-10s), readiness probe passes
+→ GPU node boots with vLLM image pre-cached (GKE Secondary Boot Disk)
+→ vLLM loads model weights from PVC (~128s), readiness probe passes
 → Worker pulls jobs, calls vLLM, writes results
 → Queue drains → KEDA scales to 0 → GPU node removed
 ```
@@ -194,9 +195,44 @@ Poll `GET /result/{job_id}`. Returns `{status: pending}` until inference complet
 
 ## Demo
 
-<!-- Add demo GIF/video after Phase 2 completion -->
+Full cycle run on GCP GKE (g2-standard-4, NVIDIA L4, us-central1-a).
 
-*Demo recording: idle system (0 pods, 0 GPU nodes) → Locust load test → GPU node provisions → inference serves → everything scales to zero.*
+![Grafana full-cycle dashboard](docs/grafana-full-cycle.png)
+
+### What the dashboard shows
+
+Two distinct queue depth hills separated by a visible valley — each telling a different story:
+
+**Phase 1 — Cold Start (left hill, ~5 min plateau)**
+- Queue depth holds at 30 for ~5 minutes while the system cold-starts from zero
+- GPU node provisions (+1m53s), vLLM image loads from secondary boot disk, model loads from PVC
+- Worker pods scale 0→1→2, vLLM pod scales 0→1
+- GPU memory jumps from 0 → 18 GB once model is in VRAM
+- First tokens begin at ~5m9s; queue drains in seconds once vLLM is ready
+
+**Valley — ~60s baseline**
+- Queue at 0; GPU node and pods still warm (Cluster Autoscaler has not yet deprovisioned)
+
+**Phase 2 — Warm Response (right hill, ~30s drain)**
+- 100 requests fired into an already-warm system (GPU node up, vLLM loaded)
+- Queue drains in 30s — no cold start overhead
+- GPU utilization spikes sharply; TTFT ~140–200ms p95
+- Tokens/sec peak visible in row 3
+
+**Cool down**
+- KEDA scales pods to 0 after ~5m32s of inactivity
+- Cluster Autoscaler removes GPU node after ~17m15s — cost drops to $0
+
+### Benchmark numbers (GCP GKE, NVIDIA L4)
+
+| Metric | Value |
+|---|---|
+| Cold start (GPU node → first token) | **5m9s** |
+| Warm response (100 jobs, no cold start) | **30s** |
+| TTFT p95 | **~140–200ms** |
+| Pods → 0 after idle | **~5m32s** (KEDA cooldown) |
+| GPU node → 0 after idle | **~17m15s** (Cluster Autoscaler) |
+| Cost when idle | **$0** |
 
 ## Project Structure
 
@@ -220,6 +256,7 @@ See [ROADMAP.md](ROADMAP.md) for detailed version history and plans.
 - [x] Repository scaffolded
 - [x] v0.1 Phase 1 — Local GPU prototype (k3d)
 - [x] v0.1 Phase 2 — Cloud GPU deployment (GCP GKE)
+- [x] v0.1 Phase 3 — Cold start optimization (PV for model weights + GKE Secondary Boot Disk)
 - [ ] v0.2 — SSE streaming, model multiplexing
 
 ## Author
