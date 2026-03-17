@@ -201,7 +201,7 @@ Full cycle run on GCP GKE (g2-standard-4, NVIDIA L4, us-central1-a).
 
 ### What the dashboard shows
 
-Two distinct queue depth hills separated by a visible valley — each telling a different story:
+A hill, a valley, and a spike — each telling a different story:
 
 **Phase 1 — Cold Start (left hill, ~5 min plateau)**
 - Queue depth holds at 30 for ~5 minutes while the system cold-starts from zero
@@ -213,9 +213,9 @@ Two distinct queue depth hills separated by a visible valley — each telling a 
 **Valley — ~60s baseline**
 - Queue at 0; GPU node and pods still warm (Cluster Autoscaler has not yet deprovisioned)
 
-**Phase 2 — Warm Response (right hill, ~30s drain)**
+**Phase 2 — Warm Response (right spike, ~30s)**
 - 100 requests fired into an already-warm system (GPU node up, vLLM loaded)
-- Queue drains in 30s — no cold start overhead
+- Queue spikes and drains in ~30s — no cold start overhead, workers immediately consume jobs
 - GPU utilization spikes sharply; TTFT ~140–200ms p95
 - Tokens/sec peak visible in row 3
 
