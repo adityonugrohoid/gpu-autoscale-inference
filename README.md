@@ -23,37 +23,42 @@
 - [Architecture](#architecture)
 - [Getting Started](#getting-started)
 - [How It Works](#how-it-works)
+- [Demo](#demo)
+- [Cold Start Optimization](#cold-start-optimization)
+- [Observability](#observability)
 - [Project Structure](#project-structure)
 - [Roadmap](#roadmap)
 - [Author](#author)
 
 ## Overview
 
-This project demonstrates production-grade AI infrastructure engineering: an LLM inference platform where GPU resources are fully elastic. When request queue depth exceeds a threshold, KEDA scales worker pods from zero. In cloud deployment, a Cluster Autoscaler provisions the GPU virtual machine itself — so zero idle cost is not just pod-level but node-level.
+This project demonstrates production-grade AI infrastructure: an LLM inference platform with fully elastic GPU provisioning. Requests are queued in Redis; when queue depth crosses a threshold, KEDA triggers event-driven pod autoscaling from zero replicas. On GKE, the Cluster Autoscaler provisions a GPU node in response to pending pods with `nvidia.com/gpu` resource requests — achieving true scale-to-zero at both the pod and node level.
 
-The architecture mirrors inference platforms used by OpenAI, Anthropic, and Google — scaled down to a single GPU.
+vLLM serves inference using continuous batching, with model weights persisted on a PersistentVolumeClaim and container image layers pre-cached via GKE Secondary Boot Disk — reducing cold start from ~9 minutes to ~5 minutes.
 
 ## Features
 
-- **Scale-to-zero GPU** — GPU node provisions on demand, deprovisions when idle
-- **Two-layer autoscaling** — KEDA (pod) + Cluster Autoscaler (node) working in tandem
-- **Queue-driven inference** — Redis queue buffers requests during cold start; no dropped traffic
-- **Async API** — fire-and-forget `/generate`, poll `/result/{job_id}`
-- **Production observability** — Prometheus + Grafana + NVIDIA dcgm-exporter
+- **Scale-to-zero GPU nodes** — Cluster Autoscaler provisions/deprovisions GPU VMs based on pending pod scheduling; $0/hr when idle
+- **Event-driven pod autoscaling** — KEDA ScaledObjects watch Redis queue depth, scaling worker and vLLM Deployments between 0 and N replicas
+- **Queue-buffered inference** — Redis absorbs request bursts during cold start; no dropped traffic, no client-side retry needed
+- **Continuous batching** — vLLM batches concurrent requests at the attention layer, maximizing GPU throughput per dollar
+- **Cold start optimization** — model weights on PVC (survives pod churn) + container image layer caching via GKE Secondary Boot Disk
+- **GPU telemetry** — NVIDIA DCGM exporter for utilization, power draw, and VRAM; vLLM Prometheus exporter for KV cache, TTFT, and throughput; kube-state-metrics for pod/node lifecycle
 
 ## Tech Stack
 
-| Layer | Tool |
-|---|---|
-| API Gateway | FastAPI |
-| Queue + Result Store | Redis |
-| Pod Autoscaler | KEDA |
-| Node Autoscaler | Cluster Autoscaler (AKS / GKE) |
-| Queue Consumer | Python worker |
-| Inference Engine | vLLM + Qwen/Qwen2.5-1.5B-Instruct |
-| Orchestration | Kubernetes |
-| Observability | Prometheus + Grafana + dcgm-exporter |
-| Load Testing | Locust |
+| Layer | Tool | Role |
+|---|---|---|
+| API Gateway | FastAPI | Async request ingestion, job ID issuance |
+| Message Queue | Redis (+ redis-exporter) | Job buffering, result store (5 min TTL) |
+| Pod Autoscaler | KEDA ScaledObject | Event-driven 0↔N scaling on queue depth |
+| Node Autoscaler | GKE Cluster Autoscaler | GPU VM provisioning on pending pod |
+| Inference Engine | vLLM (OpenAI-compatible) | Continuous batching, KV cache, Prometheus metrics |
+| Model | Qwen/Qwen2.5-1.5B-Instruct | 3.5 GB VRAM, ~100 tok/s on L4 |
+| GPU Telemetry | NVIDIA DCGM exporter | GPU utilization, power, memory via Prometheus |
+| Cluster Metrics | kube-state-metrics | Pod replica counts, node capacity, deployment state |
+| Dashboarding | Grafana (12 panels) | Queue depth, GPU util, TTFT, tokens/sec, node count |
+| Load Testing | Locust | Concurrent prompt injection for scaling validation |
 
 ## Architecture
 
@@ -79,12 +84,14 @@ graph TD
     style R fill:#16213e,color:#fff
 ```
 
-### Two-Layer Autoscaling
+### Autoscaling Layers
 
-| Layer | Tool | Trigger | What scales |
-|---|---|---|---|
-| Pod | KEDA | Redis queue depth > 5 | Worker + vLLM Deployments 0↔1 |
-| Node | Cluster Autoscaler | Pending pod with GPU request | GPU VM 0↔1 |
+| Layer | Mechanism | Trigger | Scales | Latency |
+|---|---|---|---|---|
+| Pod | KEDA ScaledObject → HPA | `redis_key_size{key="inference_queue"}` > 5 | Worker Deployment 0↔2, vLLM Deployment 0↔1 | ~30s (KEDA polling) |
+| Node | GKE Cluster Autoscaler | Pending pod with `nvidia.com/gpu: 1` resource request | GPU VM (g2-standard-4, L4) 0↔1 | ~2 min (GCE instance boot) |
+| Image | GKE Secondary Boot Disk | Node boot event | Container layer cache attached as local pd-ssd | ~0s (pre-attached) |
+| Model | PersistentVolumeClaim | vLLM pod start | Qwen2.5-1.5B weights at `/root/.cache/huggingface` | ~128s (VRAM load) |
 
 ## Getting Started
 
@@ -179,14 +186,17 @@ Every prompt is enqueued immediately. `/generate` always returns a `job_id`. No 
 ### 2. Autoscaling Chain
 
 ```
-Queue depth > 5
-→ KEDA scales Worker (0→1) + vLLM (0→1)
-→ vLLM pod requests nvidia.com/gpu: 1
-→ [cloud] Cluster Autoscaler provisions GPU node
-→ GPU node boots with vLLM image pre-cached (GKE Secondary Boot Disk)
-→ vLLM loads model weights from PVC (~128s), readiness probe passes
-→ Worker pulls jobs, calls vLLM, writes results
-→ Queue drains → KEDA scales to 0 → GPU node removed
+Queue depth > 5 (KEDA ScaledObject trigger)
+→ KEDA scales Worker Deployment 0→2, vLLM Deployment 0→1
+→ vLLM pod enters Pending: requests nvidia.com/gpu: 1
+→ Cluster Autoscaler provisions g2-standard-4 + L4 (spot, ~$0.15/hr)
+→ GPU node boots with container image pre-cached (Secondary Boot Disk)
+→ vLLM loads model weights from PVC into VRAM (3.5 GB, ~128s)
+→ Readiness probe (httpGet /health, failureThreshold: 60) passes
+→ Workers pull jobs via BRPOP, POST to vLLM /v1/completions
+→ Results written to Redis (result:{job_id}, TTL 300s)
+→ Queue drains → KEDA cooldown (300s) → pods scale to 0
+→ Cluster Autoscaler: node unneeded 10 min → GPU VM deleted
 ```
 
 ### 3. Result Retrieval
@@ -233,6 +243,57 @@ A hill, a valley, and a spike — each telling a different story:
 | Pods → 0 after idle | **~5m32s** (KEDA cooldown) |
 | GPU node → 0 after idle | **~17m15s** (Cluster Autoscaler) |
 | Cost when idle | **$0** |
+
+## Cold Start Optimization
+
+Cold start is the dominant cost in scale-to-zero GPU inference. The baseline path (vLLM baked into a custom 11 GB image) took ~9 minutes — most of it spent pulling the container image over the network to a freshly provisioned GPU node.
+
+### The problem breakdown (baseline, 11 GB baked image)
+
+| Phase | Duration | Bottleneck |
+|---|---|---|
+| GPU node provision (GCE boot) | ~30s | GCE API |
+| Container image pull (11 GB) | ~8m20s | Network I/O to containerd |
+| Model load to VRAM (3.5 GB) | ~30s | PCIe bandwidth |
+| **Total** | **~9m20s** | |
+
+### Two-component fix
+
+**1. PersistentVolumeClaim for model weights**
+- Separates 3.5 GB model from the vLLM base image (11 GB → 8 GB)
+- One-time `snapshot_download` Job writes weights to a 10 Gi PVC
+- PVC survives pod restarts and node deletion (GCE Persistent Disk)
+- vLLM mounts at `/root/.cache/huggingface` via `HF_HOME` env var
+
+**2. GKE Secondary Boot Disk for container image caching**
+- Pre-extracts vLLM image layers into a GCE disk image
+- GPU nodes boot with disk attached — containerd reads layers locally
+- Eliminates network pull entirely ("seconds, regardless of image size")
+- Built with `gke-disk-image-builder` from `github.com/ai-on-gke/tools`
+
+### Result
+
+| Phase | Baseline | After optimization |
+|---|---|---|
+| GPU node provision | ~30s | ~30s |
+| Container image pull | ~8m20s | **~0s** (local disk) |
+| Model load to VRAM | ~30s | **~128s** (PVC, cold read) |
+| **Total** | **~9m20s** | **~5m9s** |
+
+The remaining ~5 min is dominated by GCE node boot + NVIDIA driver initialization + PVC-to-VRAM transfer. Further reduction requires GPU-aware node pooling or persistent GPU reservation (out of scope for scale-to-zero).
+
+## Observability
+
+Four Prometheus exporters feed a 12-panel Grafana dashboard:
+
+| Exporter | Endpoint | Key Metrics |
+|---|---|---|
+| redis-exporter | `:9121` | `redis_key_size{key="inference_queue"}` — queue depth |
+| DCGM exporter | `:9400` | `DCGM_FI_DEV_GPU_UTIL`, `DCGM_FI_DEV_POWER_USAGE`, `DCGM_FI_DEV_FB_USED` |
+| vLLM (built-in) | `:8000` | `vllm:num_requests_running`, `vllm:kv_cache_usage_perc`, `vllm:generation_tokens_total`, `vllm:time_to_first_token_seconds_bucket` |
+| kube-state-metrics | `:8080` | `kube_deployment_status_replicas`, `kube_node_status_capacity{resource="nvidia_com_gpu"}` |
+
+Scrape interval: 15s. Retention: 24h. No persistent storage (acceptable for demo; production would use Thanos or Grafana Cloud remote write).
 
 ## Project Structure
 
