@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-PROJECT="sonorous-reach-438808-c6"
-REGION="us-central1"
+PROJECT="project-15693e31-5f7e-4fce-b55"
+REGION="us-east1"
 CLUSTER="llm-gateway"
 NAMESPACE="llm-gateway"
 REGISTRY="us-docker.pkg.dev/${PROJECT}/llm-gateway"
-VLLM_DISK_IMAGE="vllm-node-cache-20260317"
+VLLM_DISK_IMAGE="vllm-node-cache-20260405"
 
 echo "=== Phase 2: GCP GKE Deployment ==="
 
@@ -42,13 +42,13 @@ docker tag vllm/vllm-openai:latest "${REGISTRY}/vllm-openai:latest"
 docker push "${REGISTRY}/vllm-openai:latest"
 
 # 5. Create GKE cluster (if not exists)
-if gcloud container clusters describe "$CLUSTER" --zone "${REGION}-a" --project "$PROJECT" &>/dev/null; then
+if gcloud container clusters describe "$CLUSTER" --zone "${REGION}-d" --project "$PROJECT" &>/dev/null; then
   echo "Cluster '$CLUSTER' already exists, skipping creation."
 else
   echo "Creating GKE cluster (1x e2-standard-2 CPU node, single-zone)..."
   gcloud container clusters create "$CLUSTER" \
     --project "$PROJECT" \
-    --zone "${REGION}-a" \
+    --zone "${REGION}-d" \
     --num-nodes 1 \
     --machine-type e2-standard-2 \
     --release-channel None \
@@ -57,10 +57,10 @@ else
 fi
 
 # 6. Create GPU node pool (if not exists)
-if gcloud container node-pools describe gpu-pool --cluster "$CLUSTER" --zone "${REGION}-a" --project "$PROJECT" &>/dev/null; then
+if gcloud container node-pools describe gpu-pool --cluster "$CLUSTER" --zone "${REGION}-d" --project "$PROJECT" &>/dev/null; then
   echo "GPU node pool already exists, skipping creation."
 else
-  echo "Creating GPU node pool (g2-standard-4 + L4, 0-1 nodes)..."
+  echo "Creating GPU node pool (n1-standard-4 + T4 SPOT, 0-1 nodes)..."
   SECONDARY_BOOT_DISK_FLAG=""
   if [ -n "${VLLM_DISK_IMAGE:-}" ]; then
     SECONDARY_BOOT_DISK_FLAG="--enable-image-streaming --secondary-boot-disk=disk-image=global/images/${VLLM_DISK_IMAGE},mode=CONTAINER_IMAGE_CACHE"
@@ -68,9 +68,10 @@ else
   gcloud container node-pools create gpu-pool \
     --cluster "$CLUSTER" \
     --project "$PROJECT" \
-    --zone "${REGION}-a" \
-    --machine-type g2-standard-4 \
-    --accelerator type=nvidia-l4,count=1 \
+    --zone "${REGION}-d" \
+    --machine-type n1-standard-4 \
+    --accelerator type=nvidia-tesla-t4,count=1 \
+    --spot \
     --num-nodes 0 \
     --min-nodes 0 \
     --max-nodes 1 \
@@ -81,7 +82,7 @@ fi
 
 # 7. Get cluster credentials
 echo "Fetching cluster credentials..."
-gcloud container clusters get-credentials "$CLUSTER" --zone "${REGION}-a" --project "$PROJECT"
+gcloud container clusters get-credentials "$CLUSTER" --zone "${REGION}-d" --project "$PROJECT"
 
 # 8. Install KEDA (if not already installed)
 if ! kubectl get namespace keda &>/dev/null; then

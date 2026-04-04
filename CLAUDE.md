@@ -130,7 +130,8 @@ Same manifests, different config. Apply cloud-specific patches from `k8s-cloud/`
 
 **Primary: GCP GKE Standard** (T4 + L4 quota already approved all regions, preemptible ~$0.15/hr)
 
-- GCP project: `sonorous-reach-438808-c6`
+- GCP project: `project-15693e31-5f7e-4fce-b55` (account: `adityonugrohogcp@gmail.com`, gcloud config: `gcp-lab`)
+- Zone: `us-east1-d`, GPU: NVIDIA T4 Spot (`n1-standard-4`), Secondary Boot Disk: `vllm-node-cache-20260405`
 - One-time prereq: `gcloud services enable container.googleapis.com`
 
 ```bash
@@ -224,8 +225,11 @@ gpu-autoscale-inference/
 │   ├── deploy-gcp.sh
 │   ├── destroy-local.sh
 │   ├── destroy-azure.sh
-│   └── destroy-gcp.sh
+│   ├── destroy-gcp.sh
+│   ├── build-node-cache.sh         # GKE secondary boot disk (Phase 3)
+│   └── full-cycle-run.sh           # Comprehensive demo with raw event logging
 ├── data/                            # Runtime artifacts — gitignored
+│   └── run-YYYYMMDD-HHMMSS/        # Per-run: 10 log files (events, KEDA, Redis, timeline...)
 ├── .env.example
 ├── ROADMAP.md
 └── README.md

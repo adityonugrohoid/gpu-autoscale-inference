@@ -7,4 +7,4 @@ spec:
           operator: "Exists"
           effect: "NoSchedule"
       nodeSelector:
-        cloud.google.com/gke-accelerator: "nvidia-l4"
+        cloud.google.com/gke-accelerator: "nvidia-tesla-t4"
