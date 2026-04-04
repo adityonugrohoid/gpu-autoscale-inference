@@ -98,12 +98,12 @@ GKE docs: *"no more than a few seconds, regardless of image size."*
 # https://github.com/ai-on-gke/tools/tree/main/gke-disk-image-builder
 
 go run ./cli \
-  --project-name=sonorous-reach-438808-c6 \
+  --project-name=project-15693e31-5f7e-4fce-b55 \
   --image-name=vllm-cache-v<VERSION> \
   --zone=us-central1-a \
   --gcs-path=gs://<LOG_BUCKET> \
   --disk-size-gb=20 \
-  --container-image=us-docker.pkg.dev/sonorous-reach-438808-c6/llm-gateway/vllm-openai:latest \
+  --container-image=us-docker.pkg.dev/project-15693e31-5f7e-4fce-b55/llm-gateway/vllm-openai:latest \
   --image-pull-auth=ServiceAccountToken \
   --timeout=40m
 ```

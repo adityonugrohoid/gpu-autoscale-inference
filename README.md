@@ -205,7 +205,7 @@ Poll `GET /result/{job_id}`. Returns `{status: pending}` until inference complet
 
 ## Demo
 
-Full cycle run on GCP GKE (g2-standard-4, NVIDIA L4, us-central1-a).
+Full cycle run on GCP GKE (n1-standard-4, NVIDIA T4 Spot, us-east1-d).
 
 ![Grafana full-cycle dashboard](docs/grafana-full-cycle.png)
 
@@ -213,49 +213,47 @@ Full cycle run on GCP GKE (g2-standard-4, NVIDIA L4, us-central1-a).
 
 A hill, a valley, and a spike — each telling a different story:
 
-**Phase 1 — Cold Start (left hill, ~5 min plateau)**
-- Queue depth holds at 30 for ~5 minutes while the system cold-starts from zero
-- GPU node provisions (+1m53s), vLLM image loads from secondary boot disk, model loads from PVC
+**Phase 1 — Cold Start (left hill, ~5.6 min plateau)**
+- Queue depth holds at 30 for ~5.6 minutes while the system cold-starts from zero
+- GPU node provisions (~2.5 min), vLLM image loads from secondary boot disk (~30s), model loads from PVC (~2.5 min)
 - Worker pods scale 0→1→2, vLLM pod scales 0→1
-- GPU memory jumps from 0 → 18 GB once model is in VRAM
-- First tokens begin at ~5m9s; queue drains in seconds once vLLM is ready
+- First tokens begin at ~5m38s; queue drains in seconds once vLLM is ready
 
 **Valley — ~60s baseline**
 - Queue at 0; GPU node and pods still warm (Cluster Autoscaler has not yet deprovisioned)
 
-**Phase 2 — Warm Response (right spike, ~30s)**
+**Phase 2 — Warm Response (right spike, ~20s)**
 - 100 requests fired into an already-warm system (GPU node up, vLLM loaded)
-- Queue spikes and drains in ~30s — no cold start overhead, workers immediately consume jobs
-- GPU utilization spikes sharply; TTFT ~140–200ms p95
+- Queue spikes and drains in ~20s — no cold start overhead, workers immediately consume jobs
+- GPU utilization spikes sharply
 - Tokens/sec peak visible in row 3
 
 **Cool down**
-- KEDA scales pods to 0 after ~5m32s of inactivity
-- Cluster Autoscaler removes GPU node after ~17m15s — cost drops to $0
+- KEDA scales pods to 0 after ~2m47s of queue idle
+- GPU node removed after ~8m35s (Spot reclaim or Cluster Autoscaler) — cost drops to $0
 
-### Benchmark numbers (GCP GKE, NVIDIA L4)
+### Benchmark numbers (GCP GKE, NVIDIA T4 Spot)
 
-| Metric | Value |
-|---|---|
-| Cold start (GPU node → first token) | **5m9s** |
-| Warm response (100 jobs, no cold start) | **30s** |
-| TTFT p95 | **~140–200ms** |
-| Pods → 0 after idle | **~5m32s** (KEDA cooldown) |
-| GPU node → 0 after idle | **~17m15s** (Cluster Autoscaler) |
-| Cost when idle | **$0** |
+| Metric | Baseline (no cache) | With Secondary Boot Disk |
+|---|---|---|
+| Cold start (GPU node → first token) | **11m (659s)** | **5m38s (338s)** |
+| Warm response (100 jobs) | **22s** | **20s** |
+| Pods → 0 after idle | **~16m30s** | **~2m47s** |
+| GPU node → 0 after idle | **~13m53s** | **~8m35s** |
+| Cost when idle | **$0** | **$0** |
 
 ## Cold Start Optimization
 
-Cold start is the dominant cost in scale-to-zero GPU inference. The baseline path (vLLM baked into a custom 11 GB image) took ~9 minutes — most of it spent pulling the container image over the network to a freshly provisioned GPU node.
+Cold start is the dominant cost in scale-to-zero GPU inference. The baseline path (vLLM 8 GB image + PVC model weights) took ~11 minutes — most of it spent pulling the container image over the network to a freshly provisioned GPU node.
 
-### The problem breakdown (baseline, 11 GB baked image)
+### The problem breakdown (baseline, 8 GB image + PVC)
 
 | Phase | Duration | Bottleneck |
 |---|---|---|
-| GPU node provision (GCE boot) | ~30s | GCE API |
-| Container image pull (11 GB) | ~8m20s | Network I/O to containerd |
-| Model load to VRAM (3.5 GB) | ~30s | PCIe bandwidth |
-| **Total** | **~9m20s** | |
+| GPU node provision (GCE boot + NVIDIA driver) | ~2.5 min | GCE API + driver init |
+| Container image pull (8 GB) | ~7 min | Network I/O to containerd |
+| Model load to VRAM (3.5 GB from PVC) | ~1.5 min | PVC → VRAM transfer |
+| **Total** | **~11 min (659s)** | |
 
 ### Two-component fix
 
@@ -266,7 +264,7 @@ Cold start is the dominant cost in scale-to-zero GPU inference. The baseline pat
 - vLLM mounts at `/root/.cache/huggingface` via `HF_HOME` env var
 
 **2. GKE Secondary Boot Disk for container image caching**
-- Pre-extracts vLLM image layers into a GCE disk image
+- Pre-extracts vLLM image layers into a GCE disk image (~10 min build)
 - GPU nodes boot with disk attached — containerd reads layers locally
 - Eliminates network pull entirely ("seconds, regardless of image size")
 - Built with `gke-disk-image-builder` from `github.com/ai-on-gke/tools`
@@ -275,12 +273,12 @@ Cold start is the dominant cost in scale-to-zero GPU inference. The baseline pat
 
 | Phase | Baseline | After optimization |
 |---|---|---|
-| GPU node provision | ~30s | ~30s |
-| Container image pull | ~8m20s | **~0s** (local disk) |
-| Model load to VRAM | ~30s | **~128s** (PVC, cold read) |
-| **Total** | **~9m20s** | **~5m9s** |
+| GPU node provision | ~2.5 min | ~2.5 min |
+| Container image pull | **~7 min** | **~30s** (local disk) |
+| Model load to VRAM | ~1.5 min | ~1.5 min |
+| **Total** | **~11 min (659s)** | **~5m38s (338s)** |
 
-The remaining ~5 min is dominated by GCE node boot + NVIDIA driver initialization + PVC-to-VRAM transfer. Further reduction requires GPU-aware node pooling or persistent GPU reservation (out of scope for scale-to-zero).
+The secondary boot disk cut cold start by **48%**. The remaining ~5.6 min is dominated by GCE node boot + NVIDIA driver initialization + PVC-to-VRAM transfer. Further reduction requires GPU-aware node pooling or persistent GPU reservation (out of scope for scale-to-zero).
 
 ## Observability
 
@@ -295,6 +293,68 @@ Four Prometheus exporters feed a 12-panel Grafana dashboard:
 
 Scrape interval: 15s. Retention: 24h. No persistent storage (acceptable for demo; production would use Thanos or Grafana Cloud remote write).
 
+### Full-Cycle Event Logging
+
+`scripts/full-cycle-run.sh` executes a complete scale-to-zero → cold start → warm response → scale-to-zero cycle and captures raw event logs from every layer of the stack.
+
+**Run it:**
+```bash
+./scripts/full-cycle-run.sh [GATEWAY_IP]
+```
+
+**Output structure** — each run creates a timestamped directory in `data/`:
+```
+data/run-20260404-215500/
+├── full-cycle.log          # Main log with all phases and status polling
+├── k8s-events.log          # Raw K8s events (watch stream, unfiltered)
+├── keda-events.log         # KEDA ScaleTargetActivated/Deactivated events
+├── node-lifecycle.log      # GPU node provision/removal + TriggeredScaleUp events
+├── pod-lifecycle.log       # vLLM/worker pod status over time
+├── redis-queue.log         # Queue depth at each poll interval
+├── worker-output.log       # Worker container stdout (job processing)
+├── vllm-output.log         # vLLM container stdout (model load, inference)
+├── timeline.log            # Key milestones with T+ offsets
+└── summary.log             # Final benchmark numbers
+```
+
+**Sample timeline.log:**
+```
+T+0s    | 2026-04-04T21:55:00Z | PRE-FLIGHT COMPLETE — system at zero
+T+1s    | 2026-04-04T21:55:01Z | PHASE 1 START — firing 30 requests (cold start)
+T+2s    | 2026-04-04T21:55:02Z | PHASE 1 QUEUED — 30 jobs in inference_queue
+T+45s   | 2026-04-04T21:55:45Z | vLLM READY — cold start = 45s
+T+60s   | 2026-04-04T21:56:00Z | PHASE 1 ALL SAMPLES COMPLETE
+T+62s   | 2026-04-04T21:56:02Z | PHASE 1 DONE — 62s total
+T+122s  | 2026-04-04T21:57:02Z | PHASE 2 START — firing 100 requests (warm GPU)
+T+152s  | 2026-04-04T21:57:32Z | PHASE 2 DONE — 30s total (warm response time)
+T+452s  | 2026-04-04T22:02:32Z | PODS SCALED TO ZERO — KEDA cooldown complete
+T+1052s | 2026-04-04T22:12:32Z | GPU NODE REMOVED — Cluster Autoscaler scale-down
+T+1052s | 2026-04-04T22:12:32Z | COOL DOWN COMPLETE — full zero state
+```
+
+**Sample k8s-events.log (raw KEDA + Cluster Autoscaler events):**
+```
+TIME                  TYPE     REASON                      OBJECT                              MESSAGE
+2026-04-04T21:55:05Z  Normal   KEDAScaleTargetActivated    ScaledObject/worker-autoscaler      Scaled apps/v1.Deployment llm-gateway/worker from 0 to 1, triggered by s0-redis-inference_queue
+2026-04-04T21:55:05Z  Normal   KEDAScaleTargetActivated    ScaledObject/vllm-autoscaler        Scaled apps/v1.Deployment llm-gateway/vllm from 0 to 1, triggered by s0-redis-inference_queue
+2026-04-04T21:55:06Z  Normal   TriggeredScaleUp            Pod/vllm-xxx                        Pod triggered scale-up: [{gpu-pool 0->1 (max: 1)}]
+2026-04-04T21:55:36Z  Normal   Scheduled                   Pod/vllm-xxx                        Successfully assigned llm-gateway/vllm-xxx to gke-llm-gateway-gpu-pool-xxx
+2026-04-04T21:55:40Z  Normal   Pulled                      Pod/vllm-xxx                        Successfully pulled image "us-docker.pkg.dev/.../vllm-openai:latest"
+2026-04-04T22:02:05Z  Normal   KEDAScaleTargetDeactivated  ScaledObject/worker-autoscaler      Scaled apps/v1.Deployment llm-gateway/worker from 2 to 0
+2026-04-04T22:02:05Z  Normal   KEDAScaleTargetDeactivated  ScaledObject/vllm-autoscaler        Scaled apps/v1.Deployment llm-gateway/vllm from 1 to 0
+```
+
+**Sample redis-queue.log:**
+```
+2026-04-04T21:55:02Z | queue=30
+2026-04-04T21:55:17Z | queue=30
+2026-04-04T21:55:32Z | queue=28
+2026-04-04T21:55:47Z | queue=0
+2026-04-04T21:57:02Z | queue=100
+2026-04-04T21:57:17Z | queue=52
+2026-04-04T21:57:32Z | queue=0
+```
+
 ## Project Structure
 
 ```
@@ -306,8 +366,14 @@ gpu-autoscale-inference/
 ├── k8s-cloud/gcp/                   # GKE-specific node pool + GPU tolerations
 ├── monitoring/                      # Prometheus + Grafana config
 ├── loadtest/                        # Locust load test
-├── scripts/                         # Deploy + destroy scripts per environment
-└── data/                            # Runtime artifacts (gitignored)
+├── scripts/
+│   ├── deploy-gcp.sh               # Full GKE deploy (cluster + images + manifests)
+│   ├── destroy-gcp.sh              # Tear down GKE resources
+│   ├── build-node-cache.sh         # Build GKE secondary boot disk image
+│   └── full-cycle-run.sh           # Full-cycle demo with comprehensive event logging
+├── data/                            # Runtime artifacts (gitignored)
+│   └── run-YYYYMMDD-HHMMSS/        # Per-run directory with 10 log files
+└── docs/                            # Research docs + optimization plans
 ```
 
 ## Roadmap

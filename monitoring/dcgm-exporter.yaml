@@ -16,7 +16,7 @@ spec:
           operator: "Exists"
           effect: "NoSchedule"
       nodeSelector:
-        cloud.google.com/gke-accelerator: "nvidia-l4"
+        cloud.google.com/gke-accelerator: "nvidia-tesla-t4"
       containers:
         - name: dcgm-exporter
           image: nvcr.io/nvidia/k8s/dcgm-exporter:3.3.5-3.4.1-ubuntu22.04

@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-PROJECT="sonorous-reach-438808-c6"
-REGION="us-central1"
+PROJECT="project-15693e31-5f7e-4fce-b55"
+REGION="us-east1"
 CLUSTER="llm-gateway"
 
 echo "=== Destroying GCP GKE Resources ==="
@@ -10,7 +10,7 @@ echo "=== Destroying GCP GKE Resources ==="
 # 1. Delete GKE cluster
 echo "Deleting GKE cluster '$CLUSTER'..."
 gcloud container clusters delete "$CLUSTER" \
-  --zone "${REGION}-a" \
+  --zone "${REGION}-d" \
   --project "$PROJECT" \
   --quiet
 
