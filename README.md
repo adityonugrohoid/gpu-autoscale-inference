@@ -209,6 +209,8 @@ Full cycle run on GCP GKE (n1-standard-4, NVIDIA T4 Spot, us-east1-d).
 
 ![Grafana full-cycle dashboard](docs/grafana-full-cycle.png)
 
+*Dashboard captures the scaling pattern through cool-down. Full scale-to-zero (gpu_nodes=0, vllm=0, workers=0) is confirmed in the raw event logs at T+655s — see `data/run-20260405-004149/timeline.log` and `k8s-events.log` for the `KEDAScaleTargetDeactivated` events.*
+
 ### What the dashboard shows
 
 A hill, a valley, and a spike — each telling a different story:
