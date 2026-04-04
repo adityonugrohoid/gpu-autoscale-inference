@@ -8,6 +8,16 @@ NAMESPACE="llm-gateway"
 REGISTRY="us-docker.pkg.dev/${PROJECT}/llm-gateway"
 VLLM_DISK_IMAGE="vllm-node-cache-20260405"
 
+# Auto-detect kubectl (prefer gcloud SDK to avoid broken Docker Desktop symlinks)
+SDK_ROOT=$(gcloud info --format="value(installation.sdk_root)" 2>/dev/null || true)
+if [ -n "$SDK_ROOT" ] && [ -f "$SDK_ROOT/bin/kubectl" ]; then
+  alias kubectl="$SDK_ROOT/bin/kubectl"
+  shopt -s expand_aliases
+elif ! kubectl version --client &>/dev/null 2>&1; then
+  echo "ERROR: kubectl not found. Install via: gcloud components install kubectl"
+  exit 1
+fi
+
 echo "=== Phase 2: GCP GKE Deployment ==="
 
 # 1. Enable required APIs
@@ -23,23 +33,55 @@ gcloud artifacts repositories create llm-gateway \
   --location=us \
   --project="$PROJECT"
 
-# 3. Configure Docker auth for Artifact Registry (token-based for WSL2 compatibility)
-echo "Configuring Docker auth..."
-gcloud auth print-access-token | docker login -u oauth2accesstoken --password-stdin us-docker.pkg.dev
+# 3. Build and push images (Docker if available, Cloud Build otherwise)
+if docker info &>/dev/null; then
+  echo "Using Docker for image builds..."
+  gcloud auth print-access-token | docker login -u oauth2accesstoken --password-stdin us-docker.pkg.dev
 
-# 4. Build and push images
-echo "Building and pushing gateway image..."
-docker build -t "${REGISTRY}/gateway:latest" ./gateway
-docker push "${REGISTRY}/gateway:latest"
+  echo "Building and pushing gateway image..."
+  docker build -t "${REGISTRY}/gateway:latest" ./gateway
+  docker push "${REGISTRY}/gateway:latest"
 
-echo "Building and pushing worker image..."
-docker build -t "${REGISTRY}/worker:latest" ./worker
-docker push "${REGISTRY}/worker:latest"
+  echo "Building and pushing worker image..."
+  docker build -t "${REGISTRY}/worker:latest" ./worker
+  docker push "${REGISTRY}/worker:latest"
 
-echo "Pushing vLLM base image to Artifact Registry..."
-docker pull vllm/vllm-openai:latest
-docker tag vllm/vllm-openai:latest "${REGISTRY}/vllm-openai:latest"
-docker push "${REGISTRY}/vllm-openai:latest"
+  echo "Pushing vLLM base image to Artifact Registry..."
+  docker pull vllm/vllm-openai:latest
+  docker tag vllm/vllm-openai:latest "${REGISTRY}/vllm-openai:latest"
+  docker push "${REGISTRY}/vllm-openai:latest"
+else
+  echo "Docker not available, using Cloud Build..."
+  gcloud services enable cloudbuild.googleapis.com --project "$PROJECT"
+
+  echo "Building gateway image via Cloud Build..."
+  gcloud builds submit ./gateway \
+    --tag "${REGISTRY}/gateway:latest" \
+    --project "$PROJECT" --quiet
+
+  echo "Building worker image via Cloud Build..."
+  gcloud builds submit ./worker \
+    --tag "${REGISTRY}/worker:latest" \
+    --project "$PROJECT" --quiet
+
+  echo "Pushing vLLM base image via Cloud Build..."
+  cat > /tmp/vllm-cloudbuild.yaml << 'CBEOF'
+steps:
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['pull', 'vllm/vllm-openai:latest']
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['tag', 'vllm/vllm-openai:latest', '${_REGISTRY}/vllm-openai:latest']
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', '${_REGISTRY}/vllm-openai:latest']
+timeout: '1800s'
+substitutions:
+  _REGISTRY: ''
+CBEOF
+  gcloud builds submit --no-source \
+    --config=/tmp/vllm-cloudbuild.yaml \
+    --substitutions="_REGISTRY=${REGISTRY}" \
+    --project "$PROJECT" --quiet
+fi
 
 # 5. Create GKE cluster (if not exists)
 if gcloud container clusters describe "$CLUSTER" --zone "${REGION}-d" --project "$PROJECT" &>/dev/null; then
@@ -171,5 +213,5 @@ echo "      -H 'Content-Type: application/json' \\"
 echo "      -d '{\"prompt\":\"Explain autoscaling\"}' &"
 echo "  done"
 echo ""
-echo "WARNING: GKE control plane costs ~\$0.10/hr + GPU node (L4) ~\$0.70/hr."
+echo "WARNING: GKE control plane costs ~\$0.10/hr + GPU Spot node (T4) ~\$0.11/hr."
 echo "ALWAYS tear down after session: ./scripts/destroy-gcp.sh"
