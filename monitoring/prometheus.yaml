@@ -152,7 +152,7 @@ data:
         {
           "title": "Queue Depth",
           "type": "timeseries",
-          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+          "gridPos": { "h": 7, "w": 6, "x": 0, "y": 0 },
           "targets": [
             {
               "expr": "redis_key_size{key=\"inference_queue\"}",
@@ -171,7 +171,7 @@ data:
         {
           "title": "Worker Pod Count",
           "type": "timeseries",
-          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+          "gridPos": { "h": 7, "w": 6, "x": 6, "y": 0 },
           "targets": [
             {
               "expr": "kube_deployment_status_replicas{deployment=\"worker\"}",
@@ -193,9 +193,145 @@ data:
           }
         },
         {
+          "title": "Node Count",
+          "type": "timeseries",
+          "gridPos": { "h": 7, "w": 6, "x": 12, "y": 0 },
+          "targets": [
+            {
+              "expr": "count(kube_node_info)",
+              "legendFormat": "total nodes",
+              "refId": "A"
+            },
+            {
+              "expr": "count(kube_node_status_capacity{resource=\"nvidia_com_gpu\"} > 0)",
+              "legendFormat": "GPU nodes",
+              "refId": "B"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "palette-classic" },
+              "custom": { "lineWidth": 2, "fillOpacity": 10 },
+              "unit": "short",
+              "decimals": 0
+            }
+          }
+        },
+        {
+          "title": "GPU Utilization",
+          "type": "timeseries",
+          "gridPos": { "h": 7, "w": 6, "x": 18, "y": 0 },
+          "targets": [
+            {
+              "expr": "DCGM_FI_DEV_GPU_UTIL",
+              "legendFormat": "{{gpu}}",
+              "refId": "A"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "palette-classic" },
+              "unit": "percent"
+            }
+          }
+        },
+        {
+          "title": "vLLM Running Requests",
+          "type": "timeseries",
+          "gridPos": { "h": 7, "w": 6, "x": 0, "y": 7 },
+          "targets": [
+            {
+              "expr": "vllm:num_requests_running",
+              "legendFormat": "running",
+              "refId": "A"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "palette-classic" },
+              "custom": { "lineWidth": 2, "fillOpacity": 10 },
+              "unit": "short"
+            }
+          }
+        },
+        {
+          "title": "vLLM Waiting Requests",
+          "type": "timeseries",
+          "gridPos": { "h": 7, "w": 6, "x": 6, "y": 7 },
+          "targets": [
+            {
+              "expr": "vllm:num_requests_waiting",
+              "legendFormat": "waiting",
+              "refId": "A"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "palette-classic" },
+              "custom": { "lineWidth": 2, "fillOpacity": 10 },
+              "unit": "short"
+            }
+          }
+        },
+        {
+          "title": "KV Cache Usage",
+          "type": "timeseries",
+          "gridPos": { "h": 7, "w": 6, "x": 12, "y": 7 },
+          "targets": [
+            {
+              "expr": "vllm:gpu_cache_usage_perc",
+              "legendFormat": "KV cache %",
+              "refId": "A"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "palette-classic" },
+              "unit": "percentunit",
+              "max": 1
+            }
+          }
+        },
+        {
+          "title": "GPU Power Draw",
+          "type": "timeseries",
+          "gridPos": { "h": 7, "w": 6, "x": 18, "y": 7 },
+          "targets": [
+            {
+              "expr": "DCGM_FI_DEV_POWER_USAGE",
+              "legendFormat": "{{gpu}}",
+              "refId": "A"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "palette-classic" },
+              "unit": "watt"
+            }
+          }
+        },
+        {
+          "title": "Tokens/sec",
+          "type": "timeseries",
+          "gridPos": { "h": 7, "w": 6, "x": 0, "y": 14 },
+          "targets": [
+            {
+              "expr": "rate(vllm:generation_tokens_total[1m])",
+              "legendFormat": "tokens/sec",
+              "refId": "A"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "palette-classic" },
+              "unit": "short"
+            }
+          }
+        },
+        {
           "title": "Request Latency (p50 / p95)",
           "type": "timeseries",
-          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+          "gridPos": { "h": 7, "w": 6, "x": 6, "y": 14 },
           "targets": [
             {
               "expr": "histogram_quantile(0.5, rate(http_request_duration_seconds_bucket[5m]))",
@@ -216,45 +352,9 @@ data:
           }
         },
         {
-          "title": "Tokens/sec",
-          "type": "timeseries",
-          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
-          "targets": [
-            {
-              "expr": "rate(vllm:generation_tokens_total[1m])",
-              "legendFormat": "tokens/sec",
-              "refId": "A"
-            }
-          ],
-          "fieldConfig": {
-            "defaults": {
-              "color": { "mode": "palette-classic" },
-              "unit": "short"
-            }
-          }
-        },
-        {
-          "title": "GPU Utilization",
-          "type": "timeseries",
-          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 },
-          "targets": [
-            {
-              "expr": "DCGM_FI_DEV_GPU_UTIL",
-              "legendFormat": "{{gpu}}",
-              "refId": "A"
-            }
-          ],
-          "fieldConfig": {
-            "defaults": {
-              "color": { "mode": "palette-classic" },
-              "unit": "percent"
-            }
-          }
-        },
-        {
           "title": "TTFT - Time to First Token",
           "type": "timeseries",
-          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 16 },
+          "gridPos": { "h": 7, "w": 6, "x": 12, "y": 14 },
           "targets": [
             {
               "expr": "histogram_quantile(0.95, rate(vllm:time_to_first_token_seconds_bucket[5m]))",
@@ -270,27 +370,20 @@ data:
           }
         },
         {
-          "title": "Node Count",
+          "title": "GPU Memory Used",
           "type": "timeseries",
-          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 24 },
+          "gridPos": { "h": 7, "w": 6, "x": 18, "y": 14 },
           "targets": [
             {
-              "expr": "count(kube_node_info)",
-              "legendFormat": "total nodes",
+              "expr": "DCGM_FI_DEV_FB_USED",
+              "legendFormat": "{{gpu}}",
               "refId": "A"
-            },
-            {
-              "expr": "count(kube_node_status_capacity{resource=\"nvidia_com_gpu\"} > 0)",
-              "legendFormat": "GPU nodes",
-              "refId": "B"
             }
           ],
           "fieldConfig": {
             "defaults": {
               "color": { "mode": "palette-classic" },
-              "custom": { "lineWidth": 2, "fillOpacity": 10 },
-              "unit": "short",
-              "decimals": 0
+              "unit": "decmbytes"
             }
           }
         }
