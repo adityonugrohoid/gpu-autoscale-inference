@@ -143,20 +143,57 @@ metadata:
 data:
   llm-gateway.json: |
     {
-      "annotations": { "list": [] },
+      "annotations": {
+        "list": [
+          {
+            "name": "Phases",
+            "datasource": { "type": "grafana", "uid": "-- Grafana --" },
+            "enable": true,
+            "iconColor": "rgba(100, 150, 220, 0.15)",
+            "target": {
+              "type": "tags",
+              "matchAny": true,
+              "tags": ["phase"],
+              "limit": 100
+            }
+          },
+          {
+            "name": "Events",
+            "datasource": { "type": "grafana", "uid": "-- Grafana --" },
+            "enable": true,
+            "iconColor": "red",
+            "target": {
+              "type": "tags",
+              "matchAny": true,
+              "tags": ["event"],
+              "limit": 100
+            }
+          }
+        ]
+      },
       "editable": true,
       "fiscalYearStartMonth": 0,
       "graphTooltip": 1,
       "links": [],
       "panels": [
         {
-          "title": "Queue Depth",
+          "title": "",
+          "type": "text",
+          "gridPos": { "h": 3, "w": 24, "x": 0, "y": 0 },
+          "transparent": true,
+          "options": {
+            "mode": "html",
+            "content": "<div style=\"font-family:Inter,sans-serif;color:#dcdce0;padding:4px 14px;\"><div style=\"font-size:12px;font-weight:600;letter-spacing:1px;color:#9aa0a6;margin-bottom:6px;\">ANNOTATION LEGENDS</div><div style=\"display:flex;flex-wrap:nowrap;gap:20px;align-items:center;font-size:12px;\"><span><span style=\"display:inline-block;width:24px;height:12px;background:rgba(100,150,220,0.25);border:1px solid rgba(120,170,230,0.6);vertical-align:middle;margin-right:6px;\"></span>Phase 1 &mdash; Cold Start (19:00:56 &rarr; 19:15:25)</span><span><span style=\"display:inline-block;width:24px;height:12px;background:rgba(100,150,220,0.25);border:1px solid rgba(120,170,230,0.6);vertical-align:middle;margin-right:6px;\"></span>Phase 2 &mdash; Warm Continuous (19:16:40 &rarr; 19:21:46)</span><span style=\"color:#555;\">|</span><span><span style=\"display:inline-block;width:0;height:14px;border-left:2px dashed #dc3c3c;vertical-align:middle;margin-right:8px;\"></span>Initial: no GPU node (19:00:56)</span><span><span style=\"display:inline-block;width:0;height:14px;border-left:2px dashed #dc3c3c;vertical-align:middle;margin-right:8px;\"></span>&#9888; Spot preempt &mdash; KEDA+CA self-heal (19:06:28)</span><span><span style=\"display:inline-block;width:0;height:14px;border-left:2px dashed #dc3c3c;vertical-align:middle;margin-right:8px;\"></span>GPU scaled to zero (19:37:54)</span></div></div>"
+          }
+        },
+        {
+          "title": "[vLLM HTTP] Inference Request Rate — POST /v1/completions",
           "type": "timeseries",
-          "gridPos": { "h": 7, "w": 6, "x": 0, "y": 0 },
+          "gridPos": { "h": 7, "w": 6, "x": 0, "y": 17 },
           "targets": [
             {
-              "expr": "redis_key_size{key=\"inference_queue\"}",
-              "legendFormat": "inference_queue",
+              "expr": "sum(rate(http_requests_total{job=\"vllm\",handler=\"/v1/completions\",status=\"2xx\"}[1m]))",
+              "legendFormat": "POST /v1/completions (2xx) — req/s",
               "refId": "A"
             }
           ],
@@ -164,24 +201,63 @@ data:
             "defaults": {
               "color": { "mode": "palette-classic" },
               "custom": { "lineWidth": 2, "fillOpacity": 20 },
-              "unit": "short"
+              "unit": "reqps"
             }
           }
         },
         {
-          "title": "Worker Pod Count",
+          "title": "[Redis] Job Queue Depth vs KEDA Scale-Up Threshold",
           "type": "timeseries",
-          "gridPos": { "h": 7, "w": 6, "x": 6, "y": 0 },
+          "gridPos": { "h": 7, "w": 6, "x": 0, "y": 3 },
           "targets": [
             {
-              "expr": "kube_deployment_status_replicas{deployment=\"worker\"}",
-              "legendFormat": "worker replicas",
+              "expr": "redis_key_size{key=\"inference_queue\"}",
+              "legendFormat": "inference_queue backlog",
               "refId": "A"
             },
             {
-              "expr": "kube_deployment_status_replicas{deployment=\"vllm\"}",
-              "legendFormat": "vllm replicas",
+              "expr": "vector(5)",
+              "legendFormat": "KEDA scale-up threshold",
               "refId": "B"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "palette-classic" },
+              "custom": { "lineWidth": 2, "fillOpacity": 20 },
+              "unit": "short"
+            },
+            "overrides": [
+              {
+                "matcher": { "id": "byName", "options": "KEDA scale-up threshold" },
+                "properties": [
+                  { "id": "custom.lineStyle", "value": { "fill": "dash", "dash": [10, 10] } },
+                  { "id": "custom.fillOpacity", "value": 0 },
+                  { "id": "color", "value": { "mode": "fixed", "fixedColor": "red" } }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "title": "[HPA/KEDA] Autoscaler Trigger — Observed Metric vs Target",
+          "type": "timeseries",
+          "gridPos": { "h": 7, "w": 6, "x": 6, "y": 3 },
+          "targets": [
+            {
+              "expr": "kube_horizontalpodautoscaler_status_target_metric{horizontalpodautoscaler=\"keda-hpa-vllm-autoscaler\",metric_name=\"s0-redis-inference_queue\"}",
+              "legendFormat": "observed — vllm HPA (redis queue)",
+              "refId": "A"
+            },
+            {
+              "expr": "kube_horizontalpodautoscaler_status_target_metric{horizontalpodautoscaler=\"keda-hpa-worker-autoscaler\",metric_name=\"s0-redis-inference_queue\"}",
+              "legendFormat": "observed — worker HPA (redis queue)",
+              "refId": "B"
+            },
+            {
+              "expr": "kube_horizontalpodautoscaler_spec_target_metric{horizontalpodautoscaler=\"keda-hpa-vllm-autoscaler\",metric_name=\"s0-redis-inference_queue\"}",
+              "legendFormat": "target — KEDA threshold",
+              "refId": "C"
             }
           ],
           "fieldConfig": {
@@ -189,22 +265,32 @@ data:
               "color": { "mode": "palette-classic" },
               "custom": { "lineWidth": 2, "fillOpacity": 10 },
               "unit": "short"
-            }
+            },
+            "overrides": [
+              {
+                "matcher": { "id": "byName", "options": "target — KEDA threshold" },
+                "properties": [
+                  { "id": "custom.lineStyle", "value": { "fill": "dash", "dash": [10, 10] } },
+                  { "id": "custom.fillOpacity", "value": 0 },
+                  { "id": "color", "value": { "mode": "fixed", "fixedColor": "red" } }
+                ]
+              }
+            ]
           }
         },
         {
-          "title": "Node Count",
+          "title": "[kube-state-metrics] KEDA-Managed Pod Replicas",
           "type": "timeseries",
-          "gridPos": { "h": 7, "w": 6, "x": 12, "y": 0 },
+          "gridPos": { "h": 7, "w": 6, "x": 12, "y": 3 },
           "targets": [
             {
-              "expr": "count(kube_node_info)",
-              "legendFormat": "total nodes",
+              "expr": "kube_deployment_status_replicas{deployment=\"vllm\"}",
+              "legendFormat": "vllm replicas (GPU)",
               "refId": "A"
             },
             {
-              "expr": "count(kube_node_status_capacity{resource=\"nvidia_com_gpu\"} > 0)",
-              "legendFormat": "GPU nodes",
+              "expr": "kube_deployment_status_replicas{deployment=\"worker\"}",
+              "legendFormat": "worker replicas (CPU)",
               "refId": "B"
             }
           ],
@@ -218,146 +304,153 @@ data:
           }
         },
         {
-          "title": "GPU Utilization",
+          "title": "[kube-state-metrics] Cluster Nodes — Total vs GPU (Cluster Autoscaler)",
           "type": "timeseries",
-          "gridPos": { "h": 7, "w": 6, "x": 18, "y": 0 },
+          "gridPos": { "h": 7, "w": 6, "x": 18, "y": 3 },
           "targets": [
             {
-              "expr": "DCGM_FI_DEV_GPU_UTIL",
-              "legendFormat": "{{gpu}}",
-              "refId": "A"
-            }
-          ],
-          "fieldConfig": {
-            "defaults": {
-              "color": { "mode": "palette-classic" },
-              "unit": "percent"
-            }
-          }
-        },
-        {
-          "title": "vLLM Running Requests",
-          "type": "timeseries",
-          "gridPos": { "h": 7, "w": 6, "x": 0, "y": 7 },
-          "targets": [
-            {
-              "expr": "vllm:num_requests_running",
-              "legendFormat": "running",
-              "refId": "A"
-            }
-          ],
-          "fieldConfig": {
-            "defaults": {
-              "color": { "mode": "palette-classic" },
-              "custom": { "lineWidth": 2, "fillOpacity": 10 },
-              "unit": "short"
-            }
-          }
-        },
-        {
-          "title": "vLLM Waiting Requests",
-          "type": "timeseries",
-          "gridPos": { "h": 7, "w": 6, "x": 6, "y": 7 },
-          "targets": [
-            {
-              "expr": "vllm:num_requests_waiting",
-              "legendFormat": "waiting",
-              "refId": "A"
-            }
-          ],
-          "fieldConfig": {
-            "defaults": {
-              "color": { "mode": "palette-classic" },
-              "custom": { "lineWidth": 2, "fillOpacity": 10 },
-              "unit": "short"
-            }
-          }
-        },
-        {
-          "title": "KV Cache Usage",
-          "type": "timeseries",
-          "gridPos": { "h": 7, "w": 6, "x": 12, "y": 7 },
-          "targets": [
-            {
-              "expr": "vllm:gpu_cache_usage_perc",
-              "legendFormat": "KV cache %",
-              "refId": "A"
-            }
-          ],
-          "fieldConfig": {
-            "defaults": {
-              "color": { "mode": "palette-classic" },
-              "unit": "percentunit",
-              "max": 1
-            }
-          }
-        },
-        {
-          "title": "GPU Power Draw",
-          "type": "timeseries",
-          "gridPos": { "h": 7, "w": 6, "x": 18, "y": 7 },
-          "targets": [
-            {
-              "expr": "DCGM_FI_DEV_POWER_USAGE",
-              "legendFormat": "{{gpu}}",
-              "refId": "A"
-            }
-          ],
-          "fieldConfig": {
-            "defaults": {
-              "color": { "mode": "palette-classic" },
-              "unit": "watt"
-            }
-          }
-        },
-        {
-          "title": "Tokens/sec",
-          "type": "timeseries",
-          "gridPos": { "h": 7, "w": 6, "x": 0, "y": 14 },
-          "targets": [
-            {
-              "expr": "rate(vllm:generation_tokens_total[1m])",
-              "legendFormat": "tokens/sec",
-              "refId": "A"
-            }
-          ],
-          "fieldConfig": {
-            "defaults": {
-              "color": { "mode": "palette-classic" },
-              "unit": "short"
-            }
-          }
-        },
-        {
-          "title": "Request Latency (p50 / p95)",
-          "type": "timeseries",
-          "gridPos": { "h": 7, "w": 6, "x": 6, "y": 14 },
-          "targets": [
-            {
-              "expr": "histogram_quantile(0.5, rate(http_request_duration_seconds_bucket[5m]))",
-              "legendFormat": "p50",
+              "expr": "count(kube_node_info)",
+              "legendFormat": "total nodes",
               "refId": "A"
             },
             {
-              "expr": "histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m]))",
-              "legendFormat": "p95",
+              "expr": "count(kube_node_status_capacity{resource=\"nvidia_com_gpu\"} > 0) or vector(0)",
+              "legendFormat": "GPU nodes (nvidia.com/gpu)",
               "refId": "B"
             }
           ],
           "fieldConfig": {
             "defaults": {
               "color": { "mode": "palette-classic" },
-              "unit": "s"
+              "custom": { "lineWidth": 2, "fillOpacity": 10 },
+              "unit": "short",
+              "decimals": 0
             }
           }
         },
         {
-          "title": "TTFT - Time to First Token",
+          "title": "[DCGM] GPU SM Utilization",
           "type": "timeseries",
-          "gridPos": { "h": 7, "w": 6, "x": 12, "y": 14 },
+          "gridPos": { "h": 7, "w": 6, "x": 0, "y": 10 },
           "targets": [
             {
-              "expr": "histogram_quantile(0.95, rate(vllm:time_to_first_token_seconds_bucket[5m]))",
+              "expr": "DCGM_FI_DEV_GPU_UTIL",
+              "legendFormat": "SM util — gpu {{gpu}} ({{modelName}})",
+              "refId": "A"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "palette-classic" },
+              "custom": { "lineWidth": 2, "fillOpacity": 10 },
+              "unit": "percent",
+              "max": 100,
+              "min": 0
+            }
+          }
+        },
+        {
+          "title": "[DCGM] GPU Power Draw",
+          "type": "timeseries",
+          "gridPos": { "h": 7, "w": 6, "x": 6, "y": 10 },
+          "targets": [
+            {
+              "expr": "DCGM_FI_DEV_POWER_USAGE",
+              "legendFormat": "power — gpu {{gpu}} ({{modelName}})",
+              "refId": "A"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "palette-classic" },
+              "custom": { "lineWidth": 2, "fillOpacity": 10 },
+              "unit": "watt"
+            }
+          }
+        },
+        {
+          "title": "[DCGM] GPU HBM Memory Footprint",
+          "type": "timeseries",
+          "gridPos": { "h": 7, "w": 6, "x": 12, "y": 10 },
+          "targets": [
+            {
+              "expr": "DCGM_FI_DEV_FB_USED",
+              "legendFormat": "FB used — gpu {{gpu}} ({{modelName}})",
+              "refId": "A"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "palette-classic" },
+              "custom": { "lineWidth": 2, "fillOpacity": 10 },
+              "unit": "decmbytes"
+            }
+          }
+        },
+        {
+          "title": "[DCGM] GPU Temperature",
+          "type": "timeseries",
+          "gridPos": { "h": 7, "w": 6, "x": 18, "y": 10 },
+          "targets": [
+            {
+              "expr": "DCGM_FI_DEV_GPU_TEMP",
+              "legendFormat": "temp — gpu {{gpu}} ({{modelName}})",
+              "refId": "A"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "palette-classic" },
+              "custom": { "lineWidth": 2, "fillOpacity": 10 },
+              "unit": "celsius"
+            }
+          }
+        },
+        {
+          "title": "[vLLM] Prompt Tokens/sec — Ingress Throughput",
+          "type": "timeseries",
+          "gridPos": { "h": 7, "w": 6, "x": 6, "y": 17 },
+          "targets": [
+            {
+              "expr": "sum(rate(vllm:prompt_tokens_total[1m])) by (model_name)",
+              "legendFormat": "prompt tok/s — {{model_name}}",
+              "refId": "A"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "palette-classic" },
+              "custom": { "lineWidth": 2, "fillOpacity": 10 },
+              "unit": "short"
+            }
+          }
+        },
+        {
+          "title": "[vLLM] Generation Tokens/sec — Egress Throughput",
+          "type": "timeseries",
+          "gridPos": { "h": 7, "w": 6, "x": 12, "y": 17 },
+          "targets": [
+            {
+              "expr": "sum(rate(vllm:generation_tokens_total[1m])) by (model_name)",
+              "legendFormat": "generation tok/s — {{model_name}}",
+              "refId": "A"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "palette-classic" },
+              "custom": { "lineWidth": 2, "fillOpacity": 10 },
+              "unit": "short"
+            }
+          }
+        },
+        {
+          "title": "[vLLM] Time-to-First-Token (p95) — Cold Start Signal",
+          "type": "timeseries",
+          "gridPos": { "h": 7, "w": 6, "x": 18, "y": 17 },
+          "targets": [
+            {
+              "expr": "histogram_quantile(0.95, sum by (le) (rate(vllm:time_to_first_token_seconds_bucket[5m])))",
               "legendFormat": "p95 TTFT",
               "refId": "A"
             }
@@ -365,25 +458,8 @@ data:
           "fieldConfig": {
             "defaults": {
               "color": { "mode": "palette-classic" },
+              "custom": { "lineWidth": 2, "fillOpacity": 10 },
               "unit": "s"
-            }
-          }
-        },
-        {
-          "title": "GPU Memory Used",
-          "type": "timeseries",
-          "gridPos": { "h": 7, "w": 6, "x": 18, "y": 14 },
-          "targets": [
-            {
-              "expr": "DCGM_FI_DEV_FB_USED",
-              "legendFormat": "{{gpu}}",
-              "refId": "A"
-            }
-          ],
-          "fieldConfig": {
-            "defaults": {
-              "color": { "mode": "palette-classic" },
-              "unit": "decmbytes"
             }
           }
         }
