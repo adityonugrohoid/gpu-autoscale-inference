@@ -198,6 +198,14 @@ PIDS+=($!)
 # Why this fixes the empty-log bug: the previous implementation only ran
 # `kubectl logs --tail=200` inside cleanup(), AFTER KEDA had scaled pods
 # to zero — pod selectors returned nothing, output was zero bytes.
+#
+# CRITICAL: --pod-running-timeout=15m. kubectl logs -f defaults to 20s, so
+# spawning against a Pending pod (waiting for GPU node provision) returns
+# immediately with no output. With seen_file then suppressing re-spawn, the
+# log file stays empty for the entire run. 15m covers worst-case Spot
+# capacity backoff (~5m) + GCE provision (~2.5m) + image start (~30s).
+# Validated bug: run-20260406-224857 vllm tail spawned at T+27s vs Pending
+# pod, exited at T+47s, lost ALL vLLM startup logs (rescued manually).
 stream_pod_logs() {
   local app="$1"
   local outfile="$2"
@@ -217,7 +225,7 @@ stream_pod_logs() {
           echo ""
           echo "=== POD ${pod} START $(date -u +%Y-%m-%dT%H:%M:%SZ) ==="
         } >> "$outfile"
-        "$K" logs -n "$NAMESPACE" "${pod#pod/}" -f --timestamps=true --all-containers >> "$outfile" 2>&1 &
+        "$K" logs -n "$NAMESPACE" "${pod#pod/}" -f --timestamps=true --all-containers --pod-running-timeout=15m >> "$outfile" 2>&1 &
       fi
     done < <("$K" get pods -n "$NAMESPACE" -l "app=${app}" -o name 2>/dev/null)
     sleep 3
