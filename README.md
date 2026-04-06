@@ -254,41 +254,72 @@ Mid-cold-start at T+332s, GCP reclaimed the Spot GPU node. KEDA detected the los
 
 ## Cold Start Optimization
 
-Cold start is the dominant cost in scale-to-zero GPU inference. The baseline path (vLLM 8 GB image + PVC model weights) took ~11 minutes — most of it spent pulling the container image over the network to a freshly provisioned GPU node.
+Cold start is the dominant cost in scale-to-zero GPU inference. The baseline took **11 min (659s)** end-to-end — almost all of it spent pulling an 11 GB container image over the network to a freshly provisioned GPU node. After two stacked optimizations, cold start dropped to **5.6 min (338s)** — a **48% reduction**.
 
-### The problem breakdown (baseline, 8 GB image + PVC)
+All numbers below are from the same hardware: GCP GKE, **NVIDIA T4 Spot, n1-standard-4, us-east1-d**, measured 2026-04-05.
+
+### The baseline (11 GB baked image, no PVC)
+
+The original `vllm-custom/Dockerfile` baked Qwen2.5-1.5B's 3.5 GB weights directly into the vLLM base image — producing an 11 GB image. This was the wrong tradeoff: it added 3.5 GB to every cold-start image pull (~1.5 min) to save a 29 s HuggingFace download. Net effect: cold start got *slower*.
 
 | Phase | Duration | Bottleneck |
 |---|---|---|
 | GPU node provision (GCE boot + NVIDIA driver) | ~2.5 min | GCE API + driver init |
-| Container image pull (8 GB) | ~7 min | Network I/O to containerd |
-| Model load to VRAM (3.5 GB from PVC) | ~1.5 min | PVC → VRAM transfer |
+| Container image pull (11 GB) | **~6.5 min** | Network I/O — 28 MB/s ceiling on 4-vCPU containerd |
+| vLLM Python/CUDA boot + model load (from baked image) | ~2 min | CUDA init + 3.5 GB → VRAM |
 | **Total** | **~11 min (659s)** | |
 
-### Two-component fix
+The 28 MB/s pull speed is **not** network-bandwidth-limited (g2-standard-4 has 10 Gbps). It is bottlenecked by containerd's 3-concurrent-layer pull cap and CPU-side decompression on a 4-vCPU node. No GKE config knob exposes `max_concurrent_downloads`.
 
-**1. PersistentVolumeClaim for model weights**
-- Separates 3.5 GB model from the vLLM base image (11 GB → 8 GB)
-- One-time `snapshot_download` Job writes weights to a 10 Gi PVC
-- PVC survives pod restarts and node deletion (GCE Persistent Disk)
-- vLLM mounts at `/root/.cache/huggingface` via `HF_HOME` env var
+### Optimization 1 — PersistentVolumeClaim for model weights
 
-**2. GKE Secondary Boot Disk for container image caching**
-- Pre-extracts vLLM image layers into a GCE disk image (~10 min build)
-- GPU nodes boot with disk attached — containerd reads layers locally
-- Eliminates network pull entirely ("seconds, regardless of image size")
-- Built with `gke-disk-image-builder` from `github.com/ai-on-gke/tools`
+- Removed model baking from `vllm-custom/Dockerfile`; reverted to stock `vllm/vllm-openai:latest` (~8 GB)
+- Added one-time `snapshot_download` Job that writes Qwen2.5-1.5B to a 10 Gi PVC
+- vLLM mounts the PVC at `/root/.cache/huggingface` via `HF_HOME`
+- PVC (GCE Persistent Disk) survives pod restarts and node deletion
 
-### Result
+**What it actually fixed**: reversed the bad bake-the-model decision and shrunk the image from 11 GB → 8 GB — saving ~1.5 min of pull time. This step alone is *not* dramatic, but it is the prerequisite for Optimization 2: a stock 8 GB image is something a generic disk image can pre-cache.
 
-| Phase | Baseline | After optimization |
+### Optimization 2 — GKE Secondary Boot Disk
+
+- Built a GCE disk image with the 8 GB vLLM container layers pre-extracted into containerd's image store (`gke-disk-image-builder` from `github.com/ai-on-gke/tools`, ~10 min build)
+- GPU node pool boots with the disk attached at `mode=CONTAINER_IMAGE_CACHE`
+- containerd finds the image already on local pd-ssd — **no network pull**
+- Required `--enable-image-streaming` flag to unlock the secondary-boot-disk plugin (image streaming itself is *not* used — it hurt vLLM in a prior experiment)
+
+Disk image: `vllm-node-cache-20260405` (50 GB, us-east1-d). Rebuild only when vLLM version changes.
+
+### Result — improvement from each attempt
+
+| Phase | Baseline (11 GB baked) | After Opt 1 (PV only) | After Opt 1 + Opt 2 (PV + SBD) |
+|---|---|---|---|
+| GPU node provision | ~2.5 min | ~2.5 min | ~2.5 min |
+| Container image pull | **~6.5 min** (11 GB) | **~5 min** (8 GB) | **~30 s** (local disk) |
+| vLLM boot + model load to VRAM | ~2 min (baked) | ~2.5 min (PVC → VRAM) | ~2.5 min (PVC → VRAM) |
+| **Total** | **~11 min (659s)** ✅ measured | **~10 min** ⚠ estimated | **~5.6 min (338s)** ✅ measured |
+| **Savings vs baseline** | — | **~1.5 min (~14%)** | **~5.4 min (~48%)** |
+
+> ⚠ The "PV only" column is computed from the 8 GB image-pull math + observed PVC load time. It was never run in isolation as a separate benchmark — the two optimizations were measured together.
+
+### Why the remaining 5.6 min cannot easily go lower
+
+| Phase | Duration | Why it stays |
 |---|---|---|
-| GPU node provision | ~2.5 min | ~2.5 min |
-| Container image pull | **~7 min** | **~30s** (local disk) |
-| Model load to VRAM | ~1.5 min | ~1.5 min |
-| **Total** | **~11 min (659s)** | **~5m38s (338s)** |
+| GCE boot + NVIDIA driver init | ~2.5 min | Outside GKE's control — hardware bring-up |
+| Container start (image already local) | ~30 s | Pod scheduler + containerd unpack |
+| 3.5 GB model from PVC → VRAM | ~2.5 min | Network-attached PD bandwidth, not GPU-bound |
 
-The secondary boot disk cut cold start by **48%**. The remaining ~5.6 min is dominated by GCE node boot + NVIDIA driver initialization + PVC-to-VRAM transfer. Further reduction requires GPU-aware node pooling or persistent GPU reservation (out of scope for scale-to-zero).
+Further reduction requires either GPU-aware node warming (a min-1 idle GPU node — defeats scale-to-zero) or moving the model into a tmpfs / Local SSD on the secondary boot disk itself (adds complexity, rebuild burden). Out of scope for v0.1.
+
+### Approaches that did NOT work
+
+| Approach | Verdict |
+|---|---|
+| GKE Image Streaming alone | ❌ Lazy remote IO killed Python/CUDA imports — measurably *worse* than baseline. Reverted. |
+| eStargz / Stargz Snapshotter | ❌ GKE managed containerd blocks custom plugins |
+| DaemonSet pre-pull on a min-1 node | ❌ Cache dies with the node on scale-to-zero |
+| Artifact Registry tuning | ❌ No knobs exposed for `max_concurrent_downloads` |
+| min-1 GPU node always-on | ❌ Defeats the FinOps story ($0.70/hr ongoing) |
 
 ## Observability
 

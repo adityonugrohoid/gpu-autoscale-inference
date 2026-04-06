@@ -49,19 +49,19 @@
 
 ---
 
-## v0.1 Phase 3 — Cold Start Optimization (next)
+## v0.1 Phase 3 — Cold Start Optimization (complete)
 
-**Goal:** Reduce cold start from ~9 min → ~1-2 min.
-See `docs/cold-start-optimization.md` for full research and benchmarks.
+**Result:** Cold start reduced from **659 s (11 min)** → **338 s (5.6 min)** — 48% improvement on T4 Spot, us-east1-d, measured 2026-04-05.
+See `docs/cold-start-optimization.md` for full breakdown and L4 historical context.
 
-- [ ] Remove `vllm-custom/Dockerfile` — stop baking model into image
-- [ ] `k8s/vllm-pvc.yaml` — 10GB PVC for Qwen2.5-1.5B weights (GCP pd-standard, ~$0.17/mo)
-- [ ] `k8s/vllm-model-init-job.yaml` — one-time Job to populate PVC via `snapshot_download`
-- [ ] Patch `k8s/vllm-deployment.yaml` — mount PVC at `/root/.cache/huggingface`
-- [ ] Update `scripts/deploy-gcp.sh` — run init Job, wait for completion before traffic
-- [ ] Build GKE Secondary Boot Disk image (tool: `gke-disk-image-builder`)
-- [ ] Update GPU node pool in `deploy-gcp.sh` to use `--secondary-boot-disk`
-- [ ] Verify cold start ≤ 2 min end-to-end on fresh cluster
+- [x] Removed `vllm-custom/Dockerfile` — model no longer baked into image
+- [x] `k8s/vllm-pvc.yaml` — 10GB PVC for Qwen2.5-1.5B weights (GCP pd-standard, ~$0.17/mo)
+- [x] `k8s/vllm-model-init-job.yaml` — one-time Job to populate PVC via `snapshot_download`
+- [x] `k8s/vllm-deployment.yaml` mounts PVC at `/root/.cache/huggingface`
+- [x] `scripts/deploy-gcp.sh` runs init Job and waits for completion
+- [x] GKE Secondary Boot Disk built — `vllm-node-cache-20260405` (50 GB, us-east1-d) via `scripts/build-node-cache.sh`
+- [x] GPU node pool uses `--secondary-boot-disk=disk-image=global/images/vllm-node-cache-20260405,mode=CONTAINER_IMAGE_CACHE` (requires `--enable-image-streaming` flag to unlock)
+- [x] Verified end-to-end on `run-20260405-015400` and `run-20260406-190041`
 
 ---
 
