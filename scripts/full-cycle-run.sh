@@ -63,6 +63,7 @@ POD_LOG="${RUN_DIR}/pod-lifecycle.log"
 REDIS_LOG="${RUN_DIR}/redis-queue.log"
 WORKER_LOG="${RUN_DIR}/worker-output.log"
 VLLM_LOG="${RUN_DIR}/vllm-output.log"
+GPU_RESOURCE_LOG="${RUN_DIR}/gpu-resource-lifecycle.log"
 SUMMARY="${RUN_DIR}/summary.log"
 TIMELINE="${RUN_DIR}/timeline.log"
 
@@ -174,17 +175,103 @@ PIDS+=($!)
   >> "$NODE_LOG" 2>&1 &
 PIDS+=($!)
 
+# GPU resource registration timing — captures the exact moment nvidia.com/gpu
+# becomes schedulable. Combined with NODE_LOG's Ready=True timestamp, this
+# directly measures the device-plugin registration gap (research finding ~59s).
+# 2-second poll = sub-3s resolution; cheap (single API call per tick).
+echo "# gpu-resource-lifecycle: per-tick capacity/allocatable for accelerator nodes" > "$GPU_RESOURCE_LOG"
+(
+  while true; do
+    "$K" get nodes -l cloud.google.com/gke-accelerator -o jsonpath='{range .items[*]}{.metadata.name}{"|capacity="}{.status.capacity.nvidia\.com/gpu}{"|allocatable="}{.status.allocatable.nvidia\.com/gpu}{"\n"}{end}' 2>/dev/null \
+      | awk -v t="$(date -u +%Y-%m-%dT%H:%M:%SZ)" 'NF{print t" | "$0}' >> "$GPU_RESOURCE_LOG"
+    sleep 2
+  done
+) &
+PIDS+=($!)
+
+# Streaming pod log capture for vLLM and worker. Polls every 3s for pods
+# matching the label selector and spawns `kubectl logs -f` against any pod
+# we are not already tailing. This survives Spot preemption (replacement
+# pod gets a new tail) and pod scale-up/down. PIDs of every spawned tail
+# AND the supervisor loop itself are tracked in PIDS so the trap kills them.
+#
+# Why this fixes the empty-log bug: the previous implementation only ran
+# `kubectl logs --tail=200` inside cleanup(), AFTER KEDA had scaled pods
+# to zero — pod selectors returned nothing, output was zero bytes.
+stream_pod_logs() {
+  local app="$1"
+  local outfile="$2"
+  local seen_file
+  seen_file=$(mktemp)
+  # When the parent's cleanup kills this supervisor, cascade-kill any tails
+  # we spawned. Without this trap, `kubectl logs -f` orphans would survive.
+  # shellcheck disable=SC2064
+  trap "kill \$(jobs -p) 2>/dev/null; rm -f $seen_file; exit 0" TERM INT EXIT
+  echo "# streamed pod logs for app=${app} (started $(date -u +%Y-%m-%dT%H:%M:%SZ))" > "$outfile"
+  while true; do
+    while IFS= read -r pod; do
+      [ -z "$pod" ] && continue
+      if ! grep -Fxq "$pod" "$seen_file" 2>/dev/null; then
+        echo "$pod" >> "$seen_file"
+        {
+          echo ""
+          echo "=== POD ${pod} START $(date -u +%Y-%m-%dT%H:%M:%SZ) ==="
+        } >> "$outfile"
+        "$K" logs -n "$NAMESPACE" "${pod#pod/}" -f --timestamps=true --all-containers >> "$outfile" 2>&1 &
+      fi
+    done < <("$K" get pods -n "$NAMESPACE" -l "app=${app}" -o name 2>/dev/null)
+    sleep 3
+  done
+}
+
+stream_pod_logs vllm "$VLLM_LOG" &
+PIDS+=($!)
+stream_pod_logs worker "$WORKER_LOG" &
+PIDS+=($!)
+
+verify_logs_populated() {
+  local failed=0
+  local f
+  for f in "$MAIN_LOG" "$EVENTS_LOG" "$KEDA_LOG" "$NODE_LOG" "$POD_LOG" \
+           "$REDIS_LOG" "$VLLM_LOG" "$WORKER_LOG" "$TIMELINE" "$GPU_RESOURCE_LOG"; do
+    if [ ! -s "$f" ]; then
+      echo "LOG INTEGRITY FAILURE: $(basename "$f") is empty or missing" | tee -a "$MAIN_LOG"
+      failed=1
+    fi
+  done
+  if [ "$failed" -eq 0 ]; then
+    echo "LOG INTEGRITY OK: all expected log files are non-empty" | tee -a "$MAIN_LOG"
+  fi
+  return $failed
+}
+
 cleanup() {
   log "Cleaning up background processes..."
   for pid in "${PIDS[@]}"; do
     kill "$pid" 2>/dev/null || true
   done
-  # Capture final pod logs
-  log "Capturing final pod logs..."
-  "$K" logs -n "$NAMESPACE" -l app=worker --all-containers --tail=200 \
-    >> "$WORKER_LOG" 2>/dev/null || true
-  "$K" logs -n "$NAMESPACE" -l app=vllm --all-containers --tail=200 \
-    >> "$VLLM_LOG" 2>/dev/null || true
+  # Capture --previous (terminated) container logs for any pods that the
+  # streaming tail couldn't catch (e.g. Spot-preempted pods that exited
+  # before the supervisor's 3s poll noticed them).
+  log "Capturing --previous logs for terminated pods..."
+  for pod in $("$K" get pods -n "$NAMESPACE" -l app=vllm -o name 2>/dev/null); do
+    {
+      echo ""
+      echo "=== ${pod} --previous (post-run capture) ==="
+    } >> "$VLLM_LOG"
+    "$K" logs -n "$NAMESPACE" "${pod#pod/}" --previous --all-containers --timestamps=true \
+      >> "$VLLM_LOG" 2>&1 || true
+  done
+  for pod in $("$K" get pods -n "$NAMESPACE" -l app=worker -o name 2>/dev/null); do
+    {
+      echo ""
+      echo "=== ${pod} --previous (post-run capture) ==="
+    } >> "$WORKER_LOG"
+    "$K" logs -n "$NAMESPACE" "${pod#pod/}" --previous --all-containers --timestamps=true \
+      >> "$WORKER_LOG" 2>&1 || true
+  done
+  # Verify all expected log files are non-empty (loud but non-fatal).
+  verify_logs_populated || true
 }
 trap cleanup EXIT
 
@@ -572,17 +659,16 @@ echo "" | tee -a "$MAIN_LOG"
   echo "Pods to zero:       ${PODS_ZERO_TIME:-N/A}s (from T+0)"
   echo "GPU node removed:   ${GPU_ZERO_TIME:-N/A}s (from T+0)"
   echo ""
-  echo "--- OUTPUT FILES ---"
-  echo "Main log:           ${MAIN_LOG}"
-  echo "K8s events (raw):   ${EVENTS_LOG}"
-  echo "KEDA events:        ${KEDA_LOG}"
-  echo "Node lifecycle:     ${NODE_LOG}"
-  echo "Pod lifecycle:      ${POD_LOG}"
-  echo "Redis queue:        ${REDIS_LOG}"
-  echo "Worker logs:        ${WORKER_LOG}"
-  echo "vLLM logs:          ${VLLM_LOG}"
-  echo "Timeline:           ${TIMELINE}"
-  echo "Summary:            ${SUMMARY}"
+  echo "--- OUTPUT FILES (size in bytes) ---"
+  for f in "$MAIN_LOG" "$EVENTS_LOG" "$KEDA_LOG" "$NODE_LOG" "$POD_LOG" \
+           "$REDIS_LOG" "$WORKER_LOG" "$VLLM_LOG" "$GPU_RESOURCE_LOG" \
+           "$TIMELINE" "$SUMMARY"; do
+    if [ -e "$f" ]; then
+      printf "  %-30s %10d bytes\n" "$(basename "$f")" "$(stat -c %s "$f" 2>/dev/null || stat -f %z "$f" 2>/dev/null || echo 0)"
+    else
+      printf "  %-30s %10s\n" "$(basename "$f")" "MISSING"
+    fi
+  done
 } | tee "$SUMMARY"
 
 log ""
