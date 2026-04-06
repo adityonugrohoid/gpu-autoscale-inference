@@ -257,41 +257,41 @@ gpu-autoscale-inference/
 - **Locust load tuning** — Qwen2.5-1.5B is fast (~100+ tok/s), so use 100+ concurrent users with long prompts to keep queue populated long enough for scaling to be visible in demo
 - **`job_queue.py` not `queue.py`** — avoids Python stdlib name collision
 
-## Phase 3 — Cold Start Optimization (next)
+## Phase 3 — Cold Start Optimization (implemented)
 
-**Goal:** Reduce cold start from ~9 min → ~1-2 min using two components.
-Full research and implementation plan: `docs/cold-start-optimization.md`
+**Result:** Cold start reduced from **659 s (11 min)** → **338 s (5.6 min)** — 48% improvement on T4 Spot, us-east1-d, measured 2026-04-05.
+Full research, breakdown, and L4 historical context: `docs/cold-start-optimization.md`
 
-### Component 1 — PV for Model Weights
-- Remove `vllm-custom/Dockerfile` (no more model baking)
-- vLLM image reverts to `vllm/vllm-openai:latest` (~8GB, unmodified)
-- Add `k8s/vllm-pvc.yaml` — 10GB PVC for model weights
-- Add `k8s/vllm-model-init-job.yaml` — one-time Job: `snapshot_download` → PVC
-- Patch `k8s/vllm-deployment.yaml` — mount PVC at `/root/.cache/huggingface`
+### Component 1 — PV for Model Weights ✅
+- Removed `vllm-custom/Dockerfile` (no more model baking)
+- vLLM image reverted to `vllm/vllm-openai:latest` (~8GB, unmodified)
+- `k8s/vllm-pvc.yaml` — 10GB PVC for model weights
+- `k8s/vllm-model-init-job.yaml` — one-time Job: `snapshot_download` → PVC
+- `k8s/vllm-deployment.yaml` mounts PVC at `/root/.cache/huggingface`
 - PVC survives pod restarts and node deletion (GCP Persistent Disk)
+- **Independent contribution: ~1.5 min savings** (estimated; never measured in isolation). Main role is structural — makes a stock 8 GB image cacheable on the secondary boot disk.
 
-### Component 2 — GKE Secondary Boot Disk
+### Component 2 — GKE Secondary Boot Disk ✅
 - Officially supported GKE feature (1.30.1+)
-- Build GCE disk image with vLLM layers pre-extracted into containerd's store
-- GPU nodes boot with disk attached → no image pull needed ("seconds, regardless of size")
-- Tool: `github.com/ai-on-gke/tools/tree/main/gke-disk-image-builder`
-- Disk: 20GB pd-standard, `--timeout=40m`, `--image-pull-auth=ServiceAccountToken`
-- Node pool flag: `--enable-image-streaming --secondary-boot-disk=disk-image=global/images/NAME,mode=CONTAINER_IMAGE_CACHE`
+- GCE disk image `vllm-node-cache-20260405` (50 GB, us-east1-d) — vLLM layers pre-extracted into containerd's store
+- GPU nodes boot with disk attached → no image pull needed
+- Tool: `github.com/ai-on-gke/tools/tree/main/gke-disk-image-builder`, built via `scripts/build-node-cache.sh`
+- Node pool flag: `--enable-image-streaming --secondary-boot-disk=disk-image=global/images/vllm-node-cache-20260405,mode=CONTAINER_IMAGE_CACHE`
 - **Why not Image Streaming alone:** lazy remote IO kills Python/CUDA imports (tried, reverted). Secondary boot disk uses same plugin but reads from local pd-ssd — full speed.
-- Caveat: vLLM version change → rebuild disk image → recreate node pool
+- `--enable-image-streaming` flag is **required** to unlock secondary boot disk, even though streaming itself hurts.
+- Confirmed compatible with Spot nodes — each preempted node gets a fresh PD clone.
+- Caveat: vLLM version change → rebuild disk image → recreate node pool.
 
-### Cold Start Benchmarks (Phase 2)
+### Cold Start Benchmarks (T4 Spot, us-east1-d, 2026-04-05)
 ```
-Current (11GB baked image):          ~9 min  (confirmed across multiple runs)
-After PV only (8GB image):           ~6 min  (estimated)
-After PV + Secondary Boot Disk:      ~1-2 min (node provision + model load only)
+Baseline (11 GB baked image):        659 s (~11 min)  ✅ measured
+After PV only (8 GB image):          ~10 min          ⚠ estimated, never run in isolation
+After PV + Secondary Boot Disk:      338 s (~5.6 min) ✅ measured
 ```
 
-Prometheus-confirmed breakdown (run 23:50:08, g2-standard-4 + L4, us-central1-a):
-- +0:30 — GPU node online
-- +8:50 — image pull complete (GPU power spike 17W → 33W)
-- +9:20 — model in VRAM (3.7GB → 18.4GB)
-- +9:30 — first tokens at ~9 tok/s
+Remaining 5.6 min breakdown: ~2.5 min GPU node + driver init, ~30 s container start (image local), ~2.5 min PVC → VRAM model load. Cannot easily go lower without abandoning scale-to-zero.
+
+Earlier L4 baseline (us-central1-a, before hardware switch): ~9-9.5 min on `g2-standard-4 + L4`. Only the L4 run 23:50 has a Prometheus-confirmed breakdown — see `docs/cold-start-optimization.md`. No L4 run was ever measured with the optimizations applied.
 
 ## v0.2 Scope (Do Not Build Now)
 

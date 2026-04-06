@@ -1,18 +1,21 @@
-# Cold Start Optimization — Research & Plan
+# Cold Start Optimization — Research, Plan & Results
+
+**Status:** Implemented and benchmarked on GCP GKE T4 Spot (us-east1-d), 2026-04-05.
+**Result:** Cold start reduced from **659 s (11 min)** → **338 s (5.6 min)** — **48% improvement**.
 
 ## Problem
 
-vLLM on GKE with scale-to-zero GPU nodes has a ~9 minute cold start:
+vLLM on GKE with scale-to-zero GPU nodes had an ~11 minute cold start:
 
 ```
-30s  — Cluster Autoscaler provisions GPU VM (g2-standard-4 + L4)
+2.5m — Cluster Autoscaler provisions GPU VM (n1-standard-4 + T4 Spot)
 6.5m — GPU node pulls 11GB Docker image from Artifact Registry (~28MB/s)
-1.5m — vLLM starts Python/CUDA and loads model weights into VRAM
+2m   — vLLM starts Python/CUDA and loads model weights into VRAM
 ────
-~9m  total from queue spike to first token
+~11m total from queue spike to first token
 ```
 
-The 28MB/s pull speed is not network-bandwidth-limited (g2-standard-4 has 10Gbps). It is
+The 28MB/s pull speed is not network-bandwidth-limited (n1-standard-4 has 10Gbps). It is
 limited by containerd's default layer-pull parallelism (3 concurrent layers) and CPU
 decompression on a 4-vCPU node. No GKE config knob exposes `max_concurrent_downloads`.
 
@@ -135,24 +138,42 @@ is running. Negligible (GPU node is usually off with scale-to-zero).
 
 ---
 
-## Combined Result
+## Combined Result — Improvement from each optimization
 
-```
-Current:
-  30s node + 6.5m pull (11GB) + 1.5m vLLM load = ~9 min
+Hardware: GCP GKE, NVIDIA T4 Spot, n1-standard-4, us-east1-d. Measured 2026-04-05.
 
-After PV only:
-  30s node + 5m pull (8GB)  + 30s vLLM load   = ~6 min
+| Phase | Baseline (11 GB baked) | After Opt 1 (PV only) | After Opt 1 + Opt 2 (PV + SBD) |
+|---|---|---|---|
+| GPU node provision | ~2.5 min | ~2.5 min | ~2.5 min |
+| Container image pull | **~6.5 min** (11 GB) | **~5 min** (8 GB) | **~30 s** (local disk) |
+| vLLM boot + model load to VRAM | ~2 min (baked) | ~2.5 min (PVC → VRAM) | ~2.5 min (PVC → VRAM) |
+| **Total** | **~11 min (659s)** ✅ measured | **~10 min** ⚠ estimated | **~5.6 min (338s)** ✅ measured |
+| **Savings vs baseline** | — | **~1.5 min (~14%)** | **~5.4 min (~48%)** |
 
-After PV + Secondary Boot Disk:
-  30s node + seconds (local disk) + 30s vLLM load = ~1-2 min
-```
+> ⚠ The "PV only" column is computed from the 8 GB image-pull math + observed PVC load
+> time. It was never run in isolation as a separate benchmark — the two optimizations
+> were measured together. PV's main contribution is structural: it makes a stock 8 GB
+> image cacheable on the secondary boot disk in the first place.
+
+**Why the remaining 5.6 min cannot easily go lower:**
+
+| Phase | Duration | Why it stays |
+|---|---|---|
+| GCE boot + NVIDIA driver init | ~2.5 min | Outside GKE's control — hardware bring-up |
+| Container start (image already local) | ~30 s | Pod scheduler + containerd unpack |
+| 3.5 GB model from PVC → VRAM | ~2.5 min | Network-attached PD bandwidth, not GPU-bound |
+
+Further reduction requires either GPU-aware node warming (a min-1 idle GPU node — defeats
+scale-to-zero) or moving the model into a tmpfs / Local SSD on the secondary boot disk
+itself (adds complexity, rebuild burden). Out of scope for v0.1.
 
 ---
 
-## Cold Start Benchmarks (Recorded from Phase 2 Runs)
+## Earlier Exploration on L4 (us-central1-a)
 
-All runs against GKE g2-standard-4 + NVIDIA L4, us-central1-a, Artifact Registry same region.
+Before the project moved hardware to T4 Spot in us-east1-d, two baseline runs were
+measured on `g2-standard-4 + NVIDIA L4` in `us-central1-a`. These are kept for historical
+context — no L4 run was ever measured with the optimizations applied.
 
 | Run | Config | Queue spike → first token | Bottleneck |
 |---|---|---|---|
@@ -160,7 +181,8 @@ All runs against GKE g2-standard-4 + NVIDIA L4, us-central1-a, Artifact Registry
 | Run 23:50 | vLLM baked image (11GB) | ~9.5 min | image pull |
 | Image Streaming run | 11GB + streaming | worse | lazy remote IO |
 
-Prometheus breakdown (run 23:50, confirmed):
+Prometheus breakdown (run 23:50, confirmed) — the only fully traced cold-start in the
+project history:
 ```
 23:50:08 — queue spike
 23:50:38 — GPU node online (30s provision)
@@ -173,10 +195,15 @@ Prometheus breakdown (run 23:50, confirmed):
 active inference with a 1.5B model is too bursty for 15s samples to capture. GPU was
 active — confirmed by power draw (33W) and VRAM allocation (18.4GB).
 
+The L4 baseline (~9-9.5 min) and T4 baseline (~11 min) differ by ~2 min — different
+region, different network path, different runs at different times. The image-pull
+bottleneck is similar in both cases because it is gated by 4-vCPU containerd
+decompression, not GPU class.
+
 ---
 
 ## Implementation Status
 
-- [ ] PV for model weights (remove vllm-custom/, add PVC + init Job)
-- [ ] GKE Secondary Boot Disk (build disk image, update deploy-gcp.sh)
-- [ ] Verify cold start ≤ 2 min end-to-end
+- [x] PV for model weights — `k8s/vllm-pvc.yaml`, `k8s/vllm-model-init-job.yaml`, vLLM deployment mounts PVC
+- [x] GKE Secondary Boot Disk — `vllm-node-cache-20260405` (50 GB, us-east1-d), built via `scripts/build-node-cache.sh`
+- [x] Cold start verified at 5.6 min end-to-end (run-20260405-015400, run-20260406-190041)
