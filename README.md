@@ -205,44 +205,52 @@ Poll `GET /result/{job_id}`. Returns `{status: pending}` until inference complet
 
 ## Demo
 
-Full cycle run on GCP GKE (n1-standard-4, NVIDIA T4 Spot, us-east1-d).
+Full-cycle run on GCP GKE (n1-standard-4, NVIDIA T4 Spot, us-east1-d) — 1762 requests across two phases at 5 req/s × 180s each, full scale-to-zero confirmed at T+2233s.
 
-![Grafana full-cycle dashboard](docs/grafana-full-cycle.png)
+Run data: [`data/run-20260406-190041/`](data/run-20260406-190041/)
 
-*Dashboard captures the scaling pattern through cool-down. Full scale-to-zero (gpu_nodes=0, vllm=0, workers=0) is confirmed in the raw event logs at T+655s — see `data/run-20260405-004149/timeline.log` and `k8s-events.log` for the `KEDAScaleTargetDeactivated` events.*
+![Grafana full-cycle dashboard](docs/LLM%20Gateway%20-%20Dashboard.png)
 
 ### What the dashboard shows
 
-A hill, a valley, and a spike — each telling a different story:
+Two phases (translucent blue regions) and three event lines tell the full story:
 
-**Phase 1 — Cold Start (left hill, ~5.6 min plateau)**
-- Queue depth holds at 30 for ~5.6 minutes while the system cold-starts from zero
-- GPU node provisions (~2.5 min), vLLM image loads from secondary boot disk (~30s), model loads from PVC (~2.5 min)
-- Worker pods scale 0→1→2, vLLM pod scales 0→1
-- First tokens begin at ~5m38s; queue drains in seconds once vLLM is ready
+**Phase 1 — Cold Start (19:00:56 → 19:15:25, T+15s → T+884s)**
+- 873 requests fired at 5 req/s for 180s, then queue holds while system cold-starts from zero
+- KEDA scales worker 0→1→2 and vLLM 0→1 within ~30s of queue threshold breach
+- Cluster Autoscaler provisions GPU node (~2.5 min); image loads from Secondary Boot Disk (~7s); model loads from PVC into VRAM (~2 min)
+- First completions at T+576s; queue drains by T+595s
+- **Real-world resilience event**: a Spot preemption hit at T+332s mid-cold-start — KEDA + Cluster Autoscaler self-healed in 105s without manual intervention or lost requests (see self-heal screenshot below)
 
-**Valley — ~60s baseline**
-- Queue at 0; GPU node and pods still warm (Cluster Autoscaler has not yet deprovisioned)
+**Valley — 60s baseline pause**
+- Queue at 0; pods and GPU node remain warm
 
-**Phase 2 — Warm Response (right spike, ~20s)**
-- 100 requests fired into an already-warm system (GPU node up, vLLM loaded)
-- Queue spikes and drains in ~20s — no cold start overhead, workers immediately consume jobs
-- GPU utilization spikes sharply
-- Tokens/sec peak visible in row 3
+**Phase 2 — Warm Continuous Load (19:16:40 → 19:21:46, T+959s → T+1265s)**
+- 889 requests fired at 5 req/s for 180s into a warm system
+- Queue stays low — workers + vLLM consume in real time, no cold start overhead
+- Total Phase 2 duration: 306s (fire + drain), GPU utilization plateaus at full
 
 **Cool down**
-- KEDA scales pods to 0 after ~2m47s of queue idle
-- GPU node removed after ~8m35s (Spot reclaim or Cluster Autoscaler) — cost drops to $0
+- Pods scaled to 0 at T+1609s (KEDA cooldown complete, ~5m44s after queue idle)
+- GPU node removed at T+2233s (Cluster Autoscaler scale-down, ~10m24s after pods zero)
+- Full zero state — cost drops to $0/hr
 
-### Benchmark numbers (GCP GKE, NVIDIA T4 Spot)
+### Spot preemption resilience
 
-| Metric | Baseline (no cache) | With Secondary Boot Disk |
+![KEDA + Cluster Autoscaler self-heal after Spot preemption](docs/LLM%20Gateway%20-%20KEDA+CA%20self-heal.png)
+
+Mid-cold-start at T+332s, GCP reclaimed the Spot GPU node. KEDA detected the lost vLLM/worker pods, the Cluster Autoscaler provisioned a replacement node, and vLLM cold-started a second time — all within 105s. The Redis queue absorbed the gap; no requests were dropped, no client retry logic was needed. The two-layer autoscaler design (KEDA for pods, Cluster Autoscaler for nodes) is what makes this kind of failure self-healing rather than fatal.
+
+### Benchmark numbers (GCP GKE, NVIDIA T4 Spot, run-20260406-190041)
+
+| Metric | Value | Notes |
 |---|---|---|
-| Cold start (GPU node → first token) | **11m (659s)** | **5m38s (338s)** |
-| Warm response (100 jobs) | **22s** | **20s** |
-| Pods → 0 after idle | **~16m30s** | **~2m47s** |
-| GPU node → 0 after idle | **~13m53s** | **~8m35s** |
-| Cost when idle | **$0** | **$0** |
+| Cold start (queue → vLLM ready) | **595s** | inflated by mid-run Spot preemption + recovery |
+| Warm continuous load (889 reqs @ 5 r/s) | **306s** | fire + drain, no backlog |
+| Pods → 0 after queue idle | **~5m44s** | KEDA cooldown |
+| GPU node → 0 after pods zero | **~10m24s** | Cluster Autoscaler scale-down delay |
+| Total run duration (T0 → full zero) | **2233s (~37 min)** | end-to-end demo cycle |
+| Cost when idle | **$0/hr** | scale-to-zero confirmed |
 
 ## Cold Start Optimization
 

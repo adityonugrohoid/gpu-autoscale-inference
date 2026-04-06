@@ -11,8 +11,7 @@ VLLM_DISK_IMAGE="vllm-node-cache-20260405"
 # Auto-detect kubectl (prefer gcloud SDK to avoid broken Docker Desktop symlinks)
 SDK_ROOT=$(gcloud info --format="value(installation.sdk_root)" 2>/dev/null || true)
 if [ -n "$SDK_ROOT" ] && [ -f "$SDK_ROOT/bin/kubectl" ]; then
-  alias kubectl="$SDK_ROOT/bin/kubectl"
-  shopt -s expand_aliases
+  kubectl() { "$SDK_ROOT/bin/kubectl" "$@"; }
 elif ! kubectl version --client &>/dev/null 2>&1; then
   echo "ERROR: kubectl not found. Install via: gcloud components install kubectl"
   exit 1
