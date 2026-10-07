@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# build-node-cache.sh — Build GKE Secondary Boot Disk image for vLLM
+# build-node-cache.sh - Build GKE Secondary Boot Disk image for vLLM
 # Run once per vLLM version change. Takes ~40 min.
 # After completion, set VLLM_DISK_IMAGE in scripts/deploy-gcp.sh and recreate the GPU node pool.
 set -euo pipefail
@@ -35,14 +35,14 @@ gcloud storage buckets create "$LOG_BUCKET" \
   --location="$REGION" 2>/dev/null || echo "  Bucket already exists, skipping."
 
 # 3. Pull, retag, push vLLM base image to Artifact Registry
-# Builder VM uses ServiceAccountToken auth — needs image in AR, not Docker Hub
+# Builder VM uses ServiceAccountToken auth - needs image in AR, not Docker Hub
 echo "Pushing vLLM base image to Artifact Registry..."
 gcloud auth print-access-token | docker login -u oauth2accesstoken --password-stdin us-docker.pkg.dev
 docker pull vllm/vllm-openai:latest
 docker tag vllm/vllm-openai:latest "${REGISTRY}/vllm-openai:latest"
 docker push "${REGISTRY}/vllm-openai:latest"
 
-# 4. Clone ai-on-gke tools (sparse checkout — builder only)
+# 4. Clone ai-on-gke tools (sparse checkout - builder only)
 TOOLS_DIR=$(mktemp -d)
 echo "Cloning gke-disk-image-builder into ${TOOLS_DIR}..."
 git clone --filter=blob:none --sparse https://github.com/ai-on-gke/tools.git "$TOOLS_DIR"
@@ -74,7 +74,7 @@ echo "  1. Open scripts/deploy-gcp.sh"
 echo "  2. Set: VLLM_DISK_IMAGE=\"${DISK_NAME}\""
 echo "  3. Delete the existing GPU node pool (if any):"
 echo "       gcloud container node-pools delete gpu-pool --cluster llm-gateway --zone ${REGION}-a --project $PROJECT"
-echo "  4. Re-run ./scripts/deploy-gcp.sh — new node pool will boot with disk cache"
-echo "  5. Expected cold start: ≤ 2 min (vs ~6 min with PV only)"
+echo "  4. Re-run ./scripts/deploy-gcp.sh - new node pool will boot with disk cache"
+echo "  5. Expected cold start: about 5.6 min end-to-end (vs about 10 min with PV only)"
 echo ""
 echo "NOTE: vLLM version change requires rebuilding the disk image and recreating the node pool."
