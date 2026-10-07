@@ -235,10 +235,10 @@ Scrape interval: 15s. Retention: 24h. No persistent storage (acceptable for demo
 ./scripts/full-cycle-run.sh [GATEWAY_IP]
 ```
 
-Each run writes a timestamped directory of log files (gitignored; not committed). The generated output structure:
+Each run writes a timestamped directory of log files (gitignored; not committed). The excerpts below are from the recorded run `run-20260406-190041`, the same run as the Grafana screenshots in the Demo section:
 
 ```
-data/run-20260404-215500/
+data/run-20260406-190041/
 ├── full-cycle.log          # Main log with all phases and status polling
 ├── k8s-events.log          # Raw K8s events (watch stream, unfiltered)
 ├── keda-events.log         # KEDA ScaleTargetActivated/Deactivated events
@@ -251,45 +251,63 @@ data/run-20260404-215500/
 └── summary.log             # Final benchmark numbers
 ```
 
-Sample `timeline.log`:
+In this run `worker-output.log` and `vllm-output.log` are empty: the capture bug fixed in PRs #28 and #29. Lines are quoted as recorded, with three edits: the GCP project path is shortened to `...`, the em-dashes and the multiplication sign in `timeline.log` are written as `-` and `x`, and `...` marks omitted lines.
+
+`timeline.log` (complete):
 
 ```
-T+0s    | 2026-04-04T21:55:00Z | PRE-FLIGHT COMPLETE - system at zero
-T+1s    | 2026-04-04T21:55:01Z | PHASE 1 START - firing 30 requests (cold start)
-T+2s    | 2026-04-04T21:55:02Z | PHASE 1 QUEUED - 30 jobs in inference_queue
-T+45s   | 2026-04-04T21:55:45Z | vLLM READY - cold start = 45s
-T+60s   | 2026-04-04T21:56:00Z | PHASE 1 ALL SAMPLES COMPLETE
-T+62s   | 2026-04-04T21:56:02Z | PHASE 1 DONE - 62s total
-T+122s  | 2026-04-04T21:57:02Z | PHASE 2 START - firing 100 requests (warm GPU)
-T+152s  | 2026-04-04T21:57:32Z | PHASE 2 DONE - 30s total (warm response time)
-T+452s  | 2026-04-04T22:02:32Z | PODS SCALED TO ZERO - KEDA cooldown complete
-T+1052s | 2026-04-04T22:12:32Z | GPU NODE REMOVED - Cluster Autoscaler scale-down
-T+1052s | 2026-04-04T22:12:32Z | COOL DOWN COMPLETE - full zero state
+T+15s | 2026-04-06T12:00:56Z | PRE-FLIGHT COMPLETE - system at zero (no GPU node, no workers, no vLLM)
+T+15s | 2026-04-06T12:00:56Z | PHASE 1 START - continuous load: 5 req/s x 180s (cold start)
+T+196s | 2026-04-06T12:03:57Z | PHASE 1 FIRE STOP - 873 requests fired, awaiting cold-start completion
+T+595s | 2026-04-06T12:10:36Z | vLLM READY - cold start = 595s
+T+595s | 2026-04-06T12:10:36Z | PHASE 1 ALL SAMPLES COMPLETE - first completions at T+576s
+T+884s | 2026-04-06T12:15:25Z | PHASE 1 DONE - 884s total, 873 requests fired
+T+892s | 2026-04-06T12:15:33Z | VALLEY GAP START - 60s pause
+T+950s | 2026-04-06T12:16:31Z | VALLEY GAP END
+T+959s | 2026-04-06T12:16:40Z | PHASE 2 START - continuous load: 5 req/s x 180s (warm GPU)
+T+1141s | 2026-04-06T12:19:42Z | PHASE 2 FIRE STOP - 889 requests fired, queue draining
+T+1265s | 2026-04-06T12:21:46Z | PHASE 2 DONE - 306s total (warm response time)
+T+1265s | 2026-04-06T12:21:46Z | COOL DOWN START
+T+1609s | 2026-04-06T12:27:30Z | PODS SCALED TO ZERO - KEDA cooldown complete at T+1609s
+T+2233s | 2026-04-06T12:37:54Z | GPU NODE REMOVED - Cluster Autoscaler scale-down at T+2233s
+T+2233s | 2026-04-06T12:37:54Z | COOL DOWN COMPLETE - full zero state
 ```
 
-Sample `k8s-events.log` (raw KEDA plus Cluster Autoscaler events):
+`k8s-events.log` (excerpt: the scaling, scheduling, image pull and scale-down events of this run; its other events, and the events the watch stream replays from earlier runs, are left out):
 
 ```
-TIME                  TYPE     REASON                      OBJECT                              MESSAGE
-2026-04-04T21:55:05Z  Normal   KEDAScaleTargetActivated    ScaledObject/worker-autoscaler      Scaled apps/v1.Deployment llm-gateway/worker from 0 to 1, triggered by s0-redis-inference_queue
-2026-04-04T21:55:05Z  Normal   KEDAScaleTargetActivated    ScaledObject/vllm-autoscaler        Scaled apps/v1.Deployment llm-gateway/vllm from 0 to 1, triggered by s0-redis-inference_queue
-2026-04-04T21:55:06Z  Normal   TriggeredScaleUp            Pod/vllm-xxx                        Pod triggered scale-up: [{gpu-pool 0->1 (max: 1)}]
-2026-04-04T21:55:36Z  Normal   Scheduled                   Pod/vllm-xxx                        Successfully assigned llm-gateway/vllm-xxx to gke-llm-gateway-gpu-pool-xxx
-2026-04-04T21:55:40Z  Normal   Pulled                      Pod/vllm-xxx                        Successfully pulled image "us-docker.pkg.dev/.../vllm-openai:latest"
-2026-04-04T22:02:05Z  Normal   KEDAScaleTargetDeactivated  ScaledObject/worker-autoscaler      Scaled apps/v1.Deployment llm-gateway/worker from 2 to 0
-2026-04-04T22:02:05Z  Normal   KEDAScaleTargetDeactivated  ScaledObject/vllm-autoscaler        Scaled apps/v1.Deployment llm-gateway/vllm from 1 to 0
+TIME                   TYPE     REASON             OBJECT   MESSAGE
+2026-04-06T12:01:19Z   Normal    KEDAScaleTargetActivated   <none>   Scaled apps/v1.Deployment llm-gateway/vllm from 0 to 1, triggered by s0-redis-inference_queue
+2026-04-06T12:01:19Z   Normal    KEDAScaleTargetActivated   <none>   Scaled apps/v1.Deployment llm-gateway/worker from 0 to 1, triggered by s0-redis-inference_queue
+2026-04-06T12:01:20Z   Normal    TriggeredScaleUp           <none>   Pod triggered scale-up: [{.../instanceGroups/gke-llm-gateway-gpu-pool-016163f0-grp 0->1 (max: 1)}]
+2026-04-06T12:03:14Z   Normal    Scheduled                  <none>   Successfully assigned llm-gateway/vllm-5596dcdf9-v2w95 to gke-llm-gateway-gpu-pool-016163f0-6r8w
+2026-04-06T12:03:25Z   Normal    Pulling                    <none>   Pulling image ".../vllm-openai:latest"
+2026-04-06T12:03:33Z   Normal    Pulled                     <none>   Successfully pulled image ".../vllm-openai:latest" in 7.62s (7.62s including waiting). Image size: 9577341348 bytes.
+2026-04-06T12:05:05Z   Normal    Killing                    <none>   Stopping container dcgm-exporter
+2026-04-06T12:05:05Z   Normal    Killing                    <none>   Stopping container vllm
+2026-04-06T12:07:55Z   Normal    Scheduled                  <none>   Successfully assigned llm-gateway/vllm-5596dcdf9-mmrvp to gke-llm-gateway-gpu-pool-016163f0-6r8w
+2026-04-06T12:08:14Z   Normal    Pulled                     <none>   Successfully pulled image ".../vllm-openai:latest" in 7.016s (7.016s including waiting). Image size: 9577341348 bytes.
+2026-04-06T12:26:19Z   Normal    KEDAScaleTargetDeactivated   <none>   Deactivated apps/v1.Deployment llm-gateway/vllm from 1 to 0
+2026-04-06T12:26:19Z   Normal    KEDAScaleTargetDeactivated   <none>   Deactivated apps/v1.Deployment llm-gateway/worker from 2 to 0
+2026-04-06T12:26:49Z   Normal    KEDAScaleTargetDeactivated   <none>   Deactivated apps/v1.Deployment llm-gateway/worker from 1 to 0
+2026-04-06T12:36:30Z   Normal    ScaleDown                    <none>   deleting pod for node scale down
 ```
 
-Sample `redis-queue.log`:
+`redis-queue.log` (excerpt; the queue holds at 873 from 12:04:30Z to 12:10:03Z while the GPU node drops out and vLLM is rescheduled):
 
 ```
-2026-04-04T21:55:02Z | queue=30
-2026-04-04T21:55:17Z | queue=30
-2026-04-04T21:55:32Z | queue=28
-2026-04-04T21:55:47Z | queue=0
-2026-04-04T21:57:02Z | queue=100
-2026-04-04T21:57:17Z | queue=52
-2026-04-04T21:57:32Z | queue=0
+2026-04-06T12:01:25Z | queue=128
+2026-04-06T12:03:50Z | queue=843
+2026-04-06T12:04:30Z | queue=873
+...
+2026-04-06T12:10:03Z | queue=873
+2026-04-06T12:10:36Z | queue=849
+2026-04-06T12:12:46Z | queue=436
+2026-04-06T12:15:25Z | queue=0
+...
+2026-04-06T12:17:08Z | queue=53
+2026-04-06T12:19:30Z | queue=320
+2026-04-06T12:21:46Z | queue=0
 ```
 
 ## API Reference
