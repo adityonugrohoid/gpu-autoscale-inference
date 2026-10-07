@@ -1,0 +1,45 @@
+TIME                   TYPE     REASON                     OBJECT   MESSAGE
+2026-04-06T17:15:19Z   Normal   KEDAScaleTargetActivated   <none>   Scaled apps/v1.Deployment llm-gateway/vllm from 0 to 1, triggered by s0-redis-inference_queue
+2026-04-06T17:15:19Z   Normal   ScalingReplicaSet          <none>   Scaled up replica set vllm-5596dcdf9 from 0 to 1
+2026-04-06T17:15:19Z   Normal   SuccessfulCreate           <none>   Created pod: vllm-5596dcdf9-wfv6l
+2026-04-06T17:15:19Z   Warning   FailedScheduling           <none>   0/1 nodes are available: 1 node(s) didn't match Pod's node affinity/selector. no new claims to deallocate, preemption: 0/1 nodes are available: 1 Preemption is not helpful for scheduling.
+2026-04-06T17:15:19Z   Normal    KEDAScaleTargetActivated   <none>   Scaled apps/v1.Deployment llm-gateway/worker from 0 to 1, triggered by s0-redis-inference_queue
+2026-04-06T17:15:19Z   Normal    ScalingReplicaSet          <none>   Scaled up replica set worker-7dd86685 from 0 to 1
+2026-04-06T17:15:20Z   Normal    SuccessfulCreate           <none>   Created pod: worker-7dd86685-nn9dd
+2026-04-06T17:15:20Z   Normal    Scheduled                  <none>   Successfully assigned llm-gateway/worker-7dd86685-nn9dd to gke-llm-gateway-default-pool-6f613b15-p1kq
+2026-04-06T17:15:20Z   Normal    Pulled                     <none>   Container image "us-docker.pkg.dev/<project-id>/llm-gateway/worker:latest" already present on machine and can be accessed by the pod
+2026-04-06T17:15:21Z   Normal    Created                    <none>   Container created
+2026-04-06T17:15:21Z   Normal    Started                    <none>   Container started
+2026-04-06T17:15:21Z   Normal    TriggeredScaleUp           <none>   Pod triggered scale-up: [{https://www.googleapis.com/compute/v1/projects/<project-id>/zones/us-east1-d/instanceGroups/gke-llm-gateway-gpu-pool-016163f0-grp 0->1 (max: 1)}]
+2026-04-06T17:15:33Z   Normal    NotTriggerScaleUp          <none>   Pod didn't trigger scale-up: 1 node(s) didn't match Pod's node affinity/selector, 1 in backoff after failed scale-up
+2026-04-06T17:15:33Z   Warning   FailedScaleUp              <none>   Node scale up in zones us-east1-d associated with this pod failed: GCE out of resources. Pod is at risk of not being scheduled.
+2026-04-06T16:15:21Z   Warning   Unhealthy                  <none>   Readiness probe failed: Get "http://10.12.1.6:8000/health": dial tcp 10.12.1.6:8000: connect: connection refused
+2026-04-06T16:15:27Z   Normal    Started                    <none>   Container started
+2026-04-06T16:15:19Z   Normal    ScalingReplicaSet          <none>   Scaled down replica set vllm-5596dcdf9 from 1 to 0
+2026-04-06T16:15:19Z   Normal    Killing                    <none>   Stopping container worker
+2026-04-06T16:15:19Z   Normal    KEDAScaleTargetDeactivated   <none>   Deactivated apps/v1.Deployment llm-gateway/vllm from 1 to 0
+2026-04-06T16:15:26Z   Normal    Scheduled                    <none>   Successfully assigned llm-gateway/worker-7dd86685-5mkmz to gke-llm-gateway-default-pool-6f613b15-p1kq
+2026-04-06T16:15:19Z   Normal    SuccessfulDelete             <none>   Deleted pod: vllm-5596dcdf9-nh74l
+2026-04-06T16:15:19Z   Normal    Killing                      <none>   Stopping container vllm
+2026-04-06T16:15:27Z   Normal    Pulled                       <none>   Container image "us-docker.pkg.dev/<project-id>/llm-gateway/worker:latest" already present on machine and can be accessed by the pod
+2026-04-06T16:15:49Z   Normal    Killing                      <none>   Stopping container worker
+2026-04-06T16:15:26Z   Normal    SuccessfulCreate             <none>   Created pod: worker-7dd86685-5mkmz
+2026-04-06T16:15:49Z   Normal    ScalingReplicaSet            <none>   Scaled down replica set worker-7dd86685 from 1 to 0
+2026-04-06T16:15:26Z   Normal    SuccessfulRescale            <none>   New size: 1; reason: external metric s0-redis-inference_queue(&LabelSelector{MatchLabels:map[string]string{scaledobject.keda.sh/name: worker-autoscaler,},MatchExpressions:[]LabelSelectorRequirement{},}) below target
+2026-04-06T16:15:19Z   Normal    Killing                      <none>   Stopping container worker
+2026-04-06T16:15:27Z   Normal    Created                      <none>   Container created
+2026-04-06T16:15:19Z   Normal    KEDAScaleTargetDeactivated   <none>   Deactivated apps/v1.Deployment llm-gateway/worker from 2 to 0
+2026-04-06T16:15:19Z   Normal    ScalingReplicaSet            <none>   Scaled down replica set worker-7dd86685 from 2 to 0
+2026-04-06T16:15:19Z   Normal    SuccessfulDelete             <none>   Deleted pod: worker-7dd86685-2htf9
+2026-04-06T16:15:19Z   Normal    SuccessfulDelete             <none>   Deleted pod: worker-7dd86685-r4rt4
+2026-04-06T16:15:49Z   Normal    SuccessfulDelete             <none>   Deleted pod: worker-7dd86685-5mkmz
+2026-04-06T16:15:49Z   Normal    KEDAScaleTargetDeactivated   <none>   Deactivated apps/v1.Deployment llm-gateway/worker from 1 to 0
+2026-04-06T17:17:30Z   Normal    SuccessfulRescale            <none>   New size: 2; reason: external metric s0-redis-inference_queue(&LabelSelector{MatchLabels:map[string]string{scaledobject.keda.sh/name: worker-autoscaler,},MatchExpressions:[]LabelSelectorRequirement{},}) above target
+2026-04-06T17:17:30Z   Normal    ScalingReplicaSet            <none>   Scaled up replica set worker-7dd86685 from 1 to 2
+2026-04-06T17:17:30Z   Normal    SuccessfulCreate             <none>   Created pod: worker-7dd86685-9gz9p
+2026-04-06T17:17:30Z   Normal    Scheduled                    <none>   Successfully assigned llm-gateway/worker-7dd86685-9gz9p to gke-llm-gateway-default-pool-6f613b15-p1kq
+2026-04-06T17:17:31Z   Normal    Pulled                       <none>   Container image "us-docker.pkg.dev/<project-id>/llm-gateway/worker:latest" already present on machine and can be accessed by the pod
+2026-04-06T17:17:31Z   Normal    Created                      <none>   Container created
+2026-04-06T17:17:31Z   Normal    Started                      <none>   Container started
+TIME                   TYPE      REASON                       OBJECT   MESSAGE
+<none>                 <none>    InternalError                <none>   an error on the server ("unable to decode an event from the watch stream: http2: client connection lost") has prevented the request from succeeding

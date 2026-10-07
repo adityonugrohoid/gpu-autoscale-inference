@@ -1,0 +1,16 @@
+2026-04-04T18:55:08Z | vllm=0/1 Pending | workers=1 | gpu_nodes=0
+2026-04-04T18:55:38Z | vllm=0/1 Pending | workers=1 | gpu_nodes=0
+2026-04-04T18:56:08Z | vllm=0/1 Pending | workers=1 | gpu_nodes=0
+2026-04-04T18:56:39Z | vllm=0/1 ContainerCreating | workers=1 | gpu_nodes=0
+2026-04-04T18:57:20Z | vllm=0/1 Running | workers=1 | gpu_nodes=0
+2026-04-04T18:57:51Z | vllm=0/1 Running | workers=1 | gpu_nodes=0
+2026-04-04T18:58:23Z | vllm=0/1 Running | workers=1 | gpu_nodes=0
+2026-04-04T18:58:53Z | vllm=0/1 Running | workers=2 | gpu_nodes=0
+2026-04-04T18:59:23Z | vllm=1/1 Running | workers=2 | gpu_nodes=0
+2026-04-04T19:02:23Z | vllm=1 | workers=2 | gpu_nodes=0
+2026-04-04T19:02:49Z | vllm=1 | workers=2 | gpu_nodes=0
+2026-04-04T19:03:19Z | vllm=1 | workers=2 | gpu_nodes=0
+2026-04-04T19:03:46Z | vllm=1 | workers=2 | gpu_nodes=0
+2026-04-04T19:04:15Z | vllm=0 | workers=2 | gpu_nodes=0
+2026-04-04T19:04:42Z | vllm=0 | workers=1 | gpu_nodes=0
+2026-04-04T19:05:08Z | vllm=0 | workers=0 | gpu_nodes=0

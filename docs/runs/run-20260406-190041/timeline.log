@@ -1,0 +1,15 @@
+T+15s | 2026-04-06T12:00:56Z | PRE-FLIGHT COMPLETE — system at zero (no GPU node, no workers, no vLLM)
+T+15s | 2026-04-06T12:00:56Z | PHASE 1 START — continuous load: 5 req/s × 180s (cold start)
+T+196s | 2026-04-06T12:03:57Z | PHASE 1 FIRE STOP — 873 requests fired, awaiting cold-start completion
+T+595s | 2026-04-06T12:10:36Z | vLLM READY — cold start = 595s
+T+595s | 2026-04-06T12:10:36Z | PHASE 1 ALL SAMPLES COMPLETE — first completions at T+576s
+T+884s | 2026-04-06T12:15:25Z | PHASE 1 DONE — 884s total, 873 requests fired
+T+892s | 2026-04-06T12:15:33Z | VALLEY GAP START — 60s pause
+T+950s | 2026-04-06T12:16:31Z | VALLEY GAP END
+T+959s | 2026-04-06T12:16:40Z | PHASE 2 START — continuous load: 5 req/s × 180s (warm GPU)
+T+1141s | 2026-04-06T12:19:42Z | PHASE 2 FIRE STOP — 889 requests fired, queue draining
+T+1265s | 2026-04-06T12:21:46Z | PHASE 2 DONE — 306s total (warm response time)
+T+1265s | 2026-04-06T12:21:46Z | COOL DOWN START
+T+1609s | 2026-04-06T12:27:30Z | PODS SCALED TO ZERO — KEDA cooldown complete at T+1609s
+T+2233s | 2026-04-06T12:37:54Z | GPU NODE REMOVED — Cluster Autoscaler scale-down at T+2233s
+T+2233s | 2026-04-06T12:37:54Z | COOL DOWN COMPLETE — full zero state

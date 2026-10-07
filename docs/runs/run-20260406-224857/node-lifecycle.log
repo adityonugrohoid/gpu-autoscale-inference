@@ -1,0 +1,69 @@
+gke-llm-gateway-default-pool-6f613b15-p1kq   Ready   True   2026-04-06T08:48:43Z
+TIME                   REASON             MESSAGE
+2026-04-06T15:49:21Z   TriggeredScaleUp   Pod triggered scale-up: [{https://www.googleapis.com/compute/v1/projects/<project-id>/zones/us-east1-d/instanceGroups/gke-llm-gateway-gpu-pool-016163f0-grp 0->1 (max: 1)}]
+gke-llm-gateway-default-pool-6f613b15-p1kq   Ready   True   2026-04-06T08:48:43Z
+gke-llm-gateway-default-pool-6f613b15-p1kq   Ready   True   2026-04-06T08:48:43Z
+gke-llm-gateway-default-pool-6f613b15-p1kq   Ready   True   2026-04-06T08:48:43Z
+2026-04-06T15:54:41Z   TriggeredScaleUp   Pod triggered scale-up: [{https://www.googleapis.com/compute/v1/projects/<project-id>/zones/us-east1-d/instanceGroups/gke-llm-gateway-gpu-pool-016163f0-grp 0->1 (max: 1)}]
+gke-llm-gateway-gpu-pool-016163f0-27ht       Ready   False   2026-04-06T15:56:49Z
+gke-llm-gateway-gpu-pool-016163f0-27ht       Ready   False   2026-04-06T15:56:49Z
+gke-llm-gateway-gpu-pool-016163f0-27ht       Ready   False   2026-04-06T15:56:49Z
+gke-llm-gateway-gpu-pool-016163f0-27ht       Ready   False   2026-04-06T15:56:49Z
+gke-llm-gateway-gpu-pool-016163f0-27ht       Ready   False   2026-04-06T15:56:49Z
+gke-llm-gateway-gpu-pool-016163f0-27ht       Ready   False   2026-04-06T15:56:49Z
+gke-llm-gateway-gpu-pool-016163f0-27ht       Ready   False   2026-04-06T15:56:49Z
+gke-llm-gateway-gpu-pool-016163f0-27ht       Ready   False   2026-04-06T15:56:49Z
+gke-llm-gateway-gpu-pool-016163f0-27ht       Ready   True    2026-04-06T15:56:49Z
+gke-llm-gateway-gpu-pool-016163f0-27ht       Ready   True    2026-04-06T15:56:49Z
+gke-llm-gateway-gpu-pool-016163f0-27ht       Ready   True    2026-04-06T15:56:49Z
+gke-llm-gateway-gpu-pool-016163f0-27ht       Ready   True    2026-04-06T15:56:49Z
+gke-llm-gateway-gpu-pool-016163f0-27ht       Ready   True    2026-04-06T15:56:49Z
+gke-llm-gateway-gpu-pool-016163f0-27ht       Ready   True    2026-04-06T15:56:49Z
+gke-llm-gateway-gpu-pool-016163f0-27ht       Ready   True    2026-04-06T15:56:49Z
+gke-llm-gateway-default-pool-6f613b15-p1kq   Ready   True    2026-04-06T08:48:43Z
+gke-llm-gateway-gpu-pool-016163f0-27ht       Ready   True    2026-04-06T15:56:49Z
+gke-llm-gateway-gpu-pool-016163f0-27ht       Ready   True    2026-04-06T15:56:49Z
+gke-llm-gateway-gpu-pool-016163f0-27ht       Ready   True    2026-04-06T15:56:49Z
+gke-llm-gateway-gpu-pool-016163f0-27ht       Ready   True    2026-04-06T15:56:49Z
+gke-llm-gateway-gpu-pool-016163f0-27ht       Ready   True    2026-04-06T15:56:49Z
+gke-llm-gateway-default-pool-6f613b15-p1kq   Ready   True    2026-04-06T08:48:43Z
+gke-llm-gateway-gpu-pool-016163f0-27ht       Ready   True    2026-04-06T15:56:49Z
+gke-llm-gateway-gpu-pool-016163f0-27ht       Ready   True    2026-04-06T15:56:49Z
+gke-llm-gateway-default-pool-6f613b15-p1kq   Ready   True    2026-04-06T08:48:43Z
+gke-llm-gateway-default-pool-6f613b15-p1kq   Ready   True    2026-04-06T08:48:43Z
+gke-llm-gateway-gpu-pool-016163f0-27ht       Ready   True    2026-04-06T15:56:49Z
+gke-llm-gateway-gpu-pool-016163f0-27ht       Ready   True    2026-04-06T15:56:49Z
+gke-llm-gateway-default-pool-6f613b15-p1kq   Ready   True    2026-04-06T08:48:43Z
+gke-llm-gateway-default-pool-6f613b15-p1kq   Ready   True    2026-04-06T08:48:43Z
+gke-llm-gateway-gpu-pool-016163f0-27ht       Ready   True    2026-04-06T15:56:49Z
+gke-llm-gateway-gpu-pool-016163f0-27ht       Ready   True    2026-04-06T15:56:49Z
+gke-llm-gateway-default-pool-6f613b15-p1kq   Ready   True    2026-04-06T08:48:43Z
+gke-llm-gateway-default-pool-6f613b15-p1kq   Ready   True    2026-04-06T08:48:43Z
+gke-llm-gateway-gpu-pool-016163f0-27ht       Ready   True    2026-04-06T15:56:49Z
+gke-llm-gateway-gpu-pool-016163f0-27ht       Ready   True    2026-04-06T15:56:49Z
+gke-llm-gateway-gpu-pool-016163f0-27ht       Ready   True    2026-04-06T15:56:49Z
+gke-llm-gateway-gpu-pool-016163f0-27ht       Ready   True    2026-04-06T15:56:49Z
+gke-llm-gateway-default-pool-6f613b15-p1kq   Ready   True    2026-04-06T08:48:43Z
+gke-llm-gateway-gpu-pool-016163f0-27ht       Ready   True    2026-04-06T15:56:49Z
+gke-llm-gateway-default-pool-6f613b15-p1kq   Ready   True    2026-04-06T08:48:43Z
+gke-llm-gateway-gpu-pool-016163f0-27ht       Ready   True    2026-04-06T15:56:49Z
+gke-llm-gateway-default-pool-6f613b15-p1kq   Ready   True    2026-04-06T08:48:43Z
+gke-llm-gateway-gpu-pool-016163f0-27ht       Ready   True    2026-04-06T15:56:49Z
+gke-llm-gateway-default-pool-6f613b15-p1kq   Ready   True    2026-04-06T08:48:43Z
+gke-llm-gateway-gpu-pool-016163f0-27ht       Ready   True    2026-04-06T15:56:49Z
+TIME                   REASON      MESSAGE
+2026-04-06T16:25:34Z   ScaleDown   marked the node as toBeDeleted/unschedulable
+gke-llm-gateway-gpu-pool-016163f0-27ht       Ready   True    2026-04-06T15:56:49Z
+2026-04-06T16:25:34Z   ScaleDown   deleting pod for node scale down
+2026-04-06T16:25:34Z   ScaleDown   deleting pod for node scale down
+2026-04-06T16:25:34Z   ScaleDown   deleting pod for node scale down
+2026-04-06T16:25:34Z   ScaleDown   deleting pod for node scale down
+2026-04-06T16:25:34Z   ScaleDown   deleting pod for node scale down
+2026-04-06T16:25:34Z   ScaleDown   deleting pod for node scale down
+2026-04-06T16:25:34Z   ScaleDown   deleting pod for node scale down
+2026-04-06T16:25:34Z   ScaleDown   deleting pod for node scale down
+gke-llm-gateway-gpu-pool-016163f0-27ht       Ready   True    2026-04-06T15:56:49Z
+gke-llm-gateway-gpu-pool-016163f0-27ht       Ready   False   2026-04-06T15:56:49Z
+gke-llm-gateway-gpu-pool-016163f0-27ht       Ready   False   2026-04-06T15:56:49Z
+gke-llm-gateway-gpu-pool-016163f0-27ht       Ready   False   2026-04-06T15:56:49Z
+gke-llm-gateway-gpu-pool-016163f0-27ht       Ready   False   2026-04-06T15:56:49Z

@@ -1,0 +1,35 @@
+============================================================
+FULL-CYCLE RUN SUMMARY — 20260406-190041
+============================================================
+
+Cluster:     GKE llm-gateway (us-east1-d)
+GPU:         NVIDIA T4 Spot (n1-standard-4)
+Model:       Qwen/Qwen2.5-1.5B-Instruct
+Gateway:     http://<gateway-ip>
+
+Load profile:       5 req/s × 180s (both phases identical)
+
+--- PHASE 1: COLD START CONTINUOUS LOAD ---
+Requests fired:     873
+Cold start (vLLM):  595s
+Phase 1 total:      884s
+
+--- PHASE 2: WARM CONTINUOUS LOAD ---
+Requests fired:     889
+Total P2 duration:  306s (fire + drain)
+
+--- COOL DOWN ---
+Pods to zero:       1609s (from T+0)
+GPU node removed:   2233s (from T+0)
+
+--- OUTPUT FILES ---
+Main log:           data/run-20260406-190041/full-cycle.log
+K8s events (raw):   data/run-20260406-190041/k8s-events.log
+KEDA events:        data/run-20260406-190041/keda-events.log
+Node lifecycle:     data/run-20260406-190041/node-lifecycle.log
+Pod lifecycle:      data/run-20260406-190041/pod-lifecycle.log
+Redis queue:        data/run-20260406-190041/redis-queue.log
+Worker logs:        data/run-20260406-190041/worker-output.log
+vLLM logs:          data/run-20260406-190041/vllm-output.log
+Timeline:           data/run-20260406-190041/timeline.log
+Summary:            data/run-20260406-190041/summary.log

@@ -1,0 +1,55 @@
+[T+0s (17:14:54)] ============================================================
+[T+0s (17:14:54)] FULL-CYCLE RUN — 20260407-001454
+[T+0s (17:14:54)] ============================================================
+[T+0s (17:14:54)] Gateway:    http://<gateway-ip>
+[T+0s (17:14:54)] Namespace:  llm-gateway
+[T+0s (17:14:54)] Output dir: data/run-20260407-001454
+[T+0s (17:14:54)] 
+[T+0s (17:14:54)] --- PRE-FLIGHT STATE ---
+[T+0s (17:14:54)] Nodes:
+NAME                                         STATUS   ROLES    AGE   VERSION               INTERNAL-IP   EXTERNAL-IP     OS-IMAGE                             KERNEL-VERSION   CONTAINER-RUNTIME
+gke-llm-gateway-default-pool-6f613b15-p1kq   Ready    <none>   8h    v1.35.1-gke.1396002   10.142.0.15   <node-external-ip>   Container-Optimized OS from Google   6.12.55+         containerd://2.1.5
+[T+4s (17:14:58)] 
+[T+4s (17:14:58)] Pods:
+NAME                          READY   STATUS    RESTARTS   AGE     IP           NODE                                         NOMINATED NODE   READINESS GATES
+gateway-56b748844f-rldpw      1/1     Running   0          8h      10.12.0.26   gke-llm-gateway-default-pool-6f613b15-p1kq   <none>           <none>
+grafana-6866797687-bzx4t      2/2     Running   0          3h22m   10.12.0.57   gke-llm-gateway-default-pool-6f613b15-p1kq   <none>           <none>
+prometheus-5d5d54674f-2mk99   1/1     Running   0          8h      10.12.0.21   gke-llm-gateway-default-pool-6f613b15-p1kq   <none>           <none>
+redis-7f6b49c679-5ndzn        2/2     Running   0          8h      10.12.0.18   gke-llm-gateway-default-pool-6f613b15-p1kq   <none>           <none>
+[T+7s (17:15:01)] 
+[T+7s (17:15:01)] ScaledObjects:
+NAME                SCALETARGETKIND      SCALETARGETNAME   MIN   MAX   READY   ACTIVE   FALLBACK   PAUSED   TRIGGERS   AUTHENTICATIONS   AGE
+vllm-autoscaler     apps/v1.Deployment   vllm              0     1     True    False    False      False    redis                        8h
+worker-autoscaler   apps/v1.Deployment   worker            0     2     True    False    False      False    redis                        8h
+[T+10s (17:15:04)] 
+[T+10s (17:15:04)] HPAs:
+NAME                         REFERENCE           TARGETS                         MINPODS   MAXPODS   REPLICAS   AGE
+keda-hpa-vllm-autoscaler     Deployment/vllm     -9223372036854775808m/5 (avg)   1         1         0          8h
+keda-hpa-worker-autoscaler   Deployment/worker   -9223372036854775808m/5 (avg)   1         2         0          8h
+[T+13s (17:15:07)] 
+[T+14s (17:15:08)] Health check: {"status":"ok"}
+[T+14s (17:15:08)] TIMELINE: PRE-FLIGHT COMPLETE — system at zero (no GPU node, no workers, no vLLM)
+[T+14s (17:15:08)] 
+[T+14s (17:15:08)] ============================================================
+[T+14s (17:15:08)] PHASE 1: COLD START CONTINUOUS LOAD — 5 req/s × 180s
+[T+14s (17:15:08)] ============================================================
+[T+14s (17:15:08)] TIMELINE: PHASE 1 START — continuous load: 5 req/s × 180s (cold start)
+[T+40s (17:15:34)]   P1 FIRING | fired=118 | gpu_nodes=0 | vllm=0/1 Pending | workers=1 | queue=114
+[T+66s (17:16:00)]   P1 FIRING | fired=253 | gpu_nodes=0 | vllm=0/1 Pending | workers=1 | queue=250
+[T+92s (17:16:26)]   P1 FIRING | fired=387 | gpu_nodes=0 | vllm=0/1 Pending | workers=1 | queue=384
+[T+120s (17:16:54)]   P1 FIRING | fired=522 | gpu_nodes=0 | vllm=0/1 Pending | workers=1 | queue=519
+[T+147s (17:17:21)]   P1 FIRING | fired=657 | gpu_nodes=0 | vllm=0/1 Pending | workers=1 | queue=655
+[T+173s (17:17:47)]   P1 FIRING | fired=793 | gpu_nodes=0 | vllm=0/1 Pending | workers=2 | queue=790
+[T+196s (17:18:10)] PHASE 1 FIRE COMPLETE — 899 requests fired in 180s, waiting for GPU ready + queue drain
+[T+196s (17:18:10)] TIMELINE: PHASE 1 FIRE STOP — 899 requests fired, awaiting cold-start completion
+[T+225s (17:18:39)]   T+225s (17:18:39) | P1 DRAIN | gpu_nodes=0 | vllm=0/1 Pending | workers=2 | queue=899 | sample_done=0/5
+[T+254s (17:19:08)]   T+254s (17:19:08) | P1 DRAIN | gpu_nodes=0 | vllm=0/1 Pending | workers=2 | queue=899 | sample_done=0/5
+[T+283s (17:19:37)]   T+283s (17:19:37) | P1 DRAIN | gpu_nodes=0 | vllm=0/1 Pending | workers=2 | queue=899 | sample_done=0/5
+[T+313s (17:20:07)]   T+313s (17:20:07) | P1 DRAIN | gpu_nodes=0 | vllm=0/1 Pending | workers=2 | queue=899 | sample_done=0/5
+[T+343s (17:20:37)]   T+343s (17:20:37) | P1 DRAIN | gpu_nodes=0 | vllm=0/1 Pending | workers=2 | queue=899 | sample_done=0/5
+[T+371s (17:21:05)]   T+371s (17:21:05) | P1 DRAIN | gpu_nodes=0 | vllm=0/1 Pending | workers=2 | queue=899 | sample_done=0/5
+[T+403s (17:21:37)]   T+403s (17:21:37) | P1 DRAIN | gpu_nodes=0 | vllm=0/1 Pending | workers=2 | queue=899 | sample_done=0/5
+[T+433s (17:22:07)]   T+433s (17:22:07) | P1 DRAIN | gpu_nodes=0 | vllm=0/1 Pending | workers=2 | queue=899 | sample_done=0/5
+[T+463s (17:22:37)]   T+463s (17:22:37) | P1 DRAIN | gpu_nodes=0 | vllm=0/1 Pending | workers=2 | queue=899 | sample_done=0/5
+[T+492s (17:23:06)]   T+492s (17:23:06) | P1 DRAIN | gpu_nodes=0 | vllm=0/1 Pending | workers=2 | queue=899 | sample_done=0/5
+[T+521s (17:23:35)]   T+521s (17:23:35) | P1 DRAIN | gpu_nodes=0 | vllm=0/1 Pending | workers=2 | queue=899 | sample_done=0/5
