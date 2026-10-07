@@ -1,0 +1,72 @@
+2026-04-06T12:01:25Z | vllm= | workers=0 | gpu_nodes=0 | phase=1-firing
+2026-04-06T12:01:53Z | vllm=0/1 Pending | workers=1 | gpu_nodes=0 | phase=1-firing
+2026-04-06T12:02:22Z | vllm=0/1 Pending | workers=2 | gpu_nodes=0 | phase=1-firing
+2026-04-06T12:02:51Z | vllm=0/1 Pending | workers=2 | gpu_nodes=1 | phase=1-firing
+2026-04-06T12:03:21Z | vllm=0/1 Pending | workers=2 | gpu_nodes=1 | phase=1-firing
+2026-04-06T12:03:50Z | vllm=0/1 Running | workers=2 | gpu_nodes=1 | phase=1-firing
+2026-04-06T12:04:30Z | vllm=0/1 Running | workers=2 | gpu_nodes=1 | phase=1-drain
+2026-04-06T12:05:01Z | vllm=0/1 Running | workers=2 | gpu_nodes=1 | phase=1-drain
+2026-04-06T12:05:33Z | vllm=0/1 Running | workers=2 | gpu_nodes=1 | phase=1-drain
+2026-04-06T12:06:14Z | vllm=0/1 Pending | workers=2 | gpu_nodes=1 | phase=1-drain
+2026-04-06T12:06:50Z | vllm=0/1 Pending | workers=2 | gpu_nodes=0 | phase=1-drain
+2026-04-06T12:07:22Z | vllm=0/1 Pending | workers=2 | gpu_nodes=1 | phase=1-drain
+2026-04-06T12:07:55Z | vllm=0/1 Pending | workers=2 | gpu_nodes=1 | phase=1-drain
+2026-04-06T12:08:28Z | vllm=0/1 Running | workers=2 | gpu_nodes=1 | phase=1-drain
+2026-04-06T12:09:00Z | vllm=0/1 Running | workers=2 | gpu_nodes=1 | phase=1-drain
+2026-04-06T12:09:31Z | vllm=0/1 Running | workers=2 | gpu_nodes=1 | phase=1-drain
+2026-04-06T12:10:03Z | vllm=0/1 Running | workers=2 | gpu_nodes=1 | phase=1-drain
+2026-04-06T12:10:36Z | vllm=1/1 Running | workers=2 | gpu_nodes=1 | phase=1-drain
+2026-04-06T12:11:09Z | vllm=1/1 Running | workers=2 | gpu_nodes=1 | phase=1-drain
+2026-04-06T12:11:42Z | vllm=1/1 Running | workers=2 | gpu_nodes=1 | phase=1-drain
+2026-04-06T12:12:13Z | vllm=1/1 Running | workers=2 | gpu_nodes=1 | phase=1-drain
+2026-04-06T12:12:46Z | vllm=1/1 Running | workers=2 | gpu_nodes=1 | phase=1-drain
+2026-04-06T12:13:17Z | vllm=1/1 Running | workers=2 | gpu_nodes=1 | phase=1-drain
+2026-04-06T12:13:50Z | vllm=1/1 Running | workers=2 | gpu_nodes=1 | phase=1-drain
+2026-04-06T12:14:22Z | vllm=1/1 Running | workers=2 | gpu_nodes=1 | phase=1-drain
+2026-04-06T12:14:54Z | vllm=1/1 Running | workers=2 | gpu_nodes=1 | phase=1-drain
+2026-04-06T12:15:25Z | vllm=1/1 Running | workers=2 | gpu_nodes=1 | phase=1-drain
+2026-04-06T12:17:08Z | vllm=1/1 Running | workers=2 | gpu_nodes=1 | phase=2-firing
+2026-04-06T12:17:36Z | vllm=1/1 Running | workers=2 | gpu_nodes=1 | phase=2-firing
+2026-04-06T12:18:06Z | vllm=1/1 Running | workers=2 | gpu_nodes=1 | phase=2-firing
+2026-04-06T12:18:34Z | vllm=1/1 Running | workers=2 | gpu_nodes=1 | phase=2-firing
+2026-04-06T12:19:03Z | vllm=1/1 Running | workers=2 | gpu_nodes=1 | phase=2-firing
+2026-04-06T12:19:30Z | vllm=1/1 Running | workers=2 | gpu_nodes=1 | phase=2-firing
+2026-04-06T12:20:07Z | vllm=1 | workers=2 | phase=2-drain
+2026-04-06T12:20:31Z | vllm=1 | workers=2 | phase=2-drain
+2026-04-06T12:20:56Z | vllm=1 | workers=2 | phase=2-drain
+2026-04-06T12:21:21Z | vllm=1 | workers=2 | phase=2-drain
+2026-04-06T12:21:46Z | vllm=1 | workers=2 | phase=2-drain
+2026-04-06T12:22:14Z | vllm=1 | workers=2 | gpu_nodes=1
+2026-04-06T12:22:43Z | vllm=1 | workers=2 | gpu_nodes=1
+2026-04-06T12:23:11Z | vllm=1 | workers=2 | gpu_nodes=1
+2026-04-06T12:23:39Z | vllm=1 | workers=2 | gpu_nodes=1
+2026-04-06T12:24:09Z | vllm=1 | workers=2 | gpu_nodes=1
+2026-04-06T12:24:37Z | vllm=1 | workers=2 | gpu_nodes=1
+2026-04-06T12:25:05Z | vllm=1 | workers=2 | gpu_nodes=1
+2026-04-06T12:25:35Z | vllm=1 | workers=2 | gpu_nodes=1
+2026-04-06T12:26:04Z | vllm=1 | workers=2 | gpu_nodes=1
+2026-04-06T12:26:33Z | vllm=0 | workers=3 | gpu_nodes=1
+2026-04-06T12:27:01Z | vllm=0 | workers=1 | gpu_nodes=1
+2026-04-06T12:27:30Z | vllm=0 | workers=0 | gpu_nodes=1
+2026-04-06T12:27:58Z | vllm=0 | workers=0 | gpu_nodes=1
+2026-04-06T12:28:27Z | vllm=0 | workers=0 | gpu_nodes=1
+2026-04-06T12:28:55Z | vllm=0 | workers=0 | gpu_nodes=1
+2026-04-06T12:29:23Z | vllm=0 | workers=0 | gpu_nodes=1
+2026-04-06T12:29:52Z | vllm=0 | workers=0 | gpu_nodes=1
+2026-04-06T12:30:21Z | vllm=0 | workers=0 | gpu_nodes=1
+2026-04-06T12:30:50Z | vllm=0 | workers=0 | gpu_nodes=1
+2026-04-06T12:31:18Z | vllm=0 | workers=0 | gpu_nodes=1
+2026-04-06T12:31:48Z | vllm=0 | workers=0 | gpu_nodes=1
+2026-04-06T12:32:17Z | vllm=0 | workers=0 | gpu_nodes=1
+2026-04-06T12:32:45Z | vllm=0 | workers=0 | gpu_nodes=1
+2026-04-06T12:33:13Z | vllm=0 | workers=0 | gpu_nodes=1
+2026-04-06T12:33:41Z | vllm=0 | workers=0 | gpu_nodes=1
+2026-04-06T12:34:10Z | vllm=0 | workers=0 | gpu_nodes=1
+2026-04-06T12:34:38Z | vllm=0 | workers=0 | gpu_nodes=1
+2026-04-06T12:35:05Z | vllm=0 | workers=0 | gpu_nodes=1
+2026-04-06T12:35:33Z | vllm=0 | workers=0 | gpu_nodes=1
+2026-04-06T12:36:01Z | vllm=0 | workers=0 | gpu_nodes=1
+2026-04-06T12:36:30Z | vllm=0 | workers=0 | gpu_nodes=1
+2026-04-06T12:36:58Z | vllm=0 | workers=0 | gpu_nodes=1
+2026-04-06T12:37:26Z | vllm=0 | workers=0 | gpu_nodes=1
+2026-04-06T12:37:54Z | vllm=0 | workers=0 | gpu_nodes=0

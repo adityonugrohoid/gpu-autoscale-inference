@@ -1,0 +1,429 @@
+[T+0s (15:48:57)] ============================================================
+[T+0s (15:48:57)] FULL-CYCLE RUN — 20260406-224857
+[T+0s (15:48:57)] ============================================================
+[T+0s (15:48:57)] Gateway:    http://<gateway-ip>
+[T+0s (15:48:57)] Namespace:  llm-gateway
+[T+0s (15:48:57)] Output dir: data/run-20260406-224857
+[T+0s (15:48:57)] 
+[T+0s (15:48:57)] --- PRE-FLIGHT STATE ---
+[T+0s (15:48:57)] Nodes:
+NAME                                         STATUS   ROLES    AGE   VERSION               INTERNAL-IP   EXTERNAL-IP     OS-IMAGE                             KERNEL-VERSION   CONTAINER-RUNTIME
+gke-llm-gateway-default-pool-6f613b15-p1kq   Ready    <none>   7h    v1.35.1-gke.1396002   10.142.0.15   <node-external-ip>   Container-Optimized OS from Google   6.12.55+         containerd://2.1.5
+[T+4s (15:49:01)] 
+[T+4s (15:49:01)] Pods:
+NAME                          READY   STATUS    RESTARTS   AGE     IP           NODE                                         NOMINATED NODE   READINESS GATES
+gateway-56b748844f-rldpw      1/1     Running   0          6h44m   10.12.0.26   gke-llm-gateway-default-pool-6f613b15-p1kq   <none>           <none>
+grafana-6866797687-bzx4t      2/2     Running   0          116m    10.12.0.57   gke-llm-gateway-default-pool-6f613b15-p1kq   <none>           <none>
+prometheus-5d5d54674f-2mk99   1/1     Running   0          6h54m   10.12.0.21   gke-llm-gateway-default-pool-6f613b15-p1kq   <none>           <none>
+redis-7f6b49c679-5ndzn        2/2     Running   0          6h56m   10.12.0.18   gke-llm-gateway-default-pool-6f613b15-p1kq   <none>           <none>
+[T+8s (15:49:05)] 
+[T+8s (15:49:05)] ScaledObjects:
+NAME                SCALETARGETKIND      SCALETARGETNAME   MIN   MAX   READY   ACTIVE   FALLBACK   PAUSED   TRIGGERS   AUTHENTICATIONS   AGE
+vllm-autoscaler     apps/v1.Deployment   vllm              0     1     True    False    False      False    redis                        6h57m
+worker-autoscaler   apps/v1.Deployment   worker            0     2     True    False    False      False    redis                        6h56m
+[T+11s (15:49:08)] 
+[T+11s (15:49:08)] HPAs:
+NAME                         REFERENCE           TARGETS                         MINPODS   MAXPODS   REPLICAS   AGE
+keda-hpa-vllm-autoscaler     Deployment/vllm     -9223372036854775808m/5 (avg)   1         1         0          6h56m
+keda-hpa-worker-autoscaler   Deployment/worker   -9223372036854775808m/5 (avg)   1         2         0          6h56m
+[T+15s (15:49:12)] 
+[T+15s (15:49:12)] Health check: {"status":"ok"}
+[T+15s (15:49:12)] TIMELINE: PRE-FLIGHT COMPLETE — system at zero (no GPU node, no workers, no vLLM)
+[T+15s (15:49:12)] 
+[T+15s (15:49:12)] ============================================================
+[T+15s (15:49:12)] PHASE 1: COLD START CONTINUOUS LOAD — 5 req/s × 180s
+[T+15s (15:49:12)] ============================================================
+[T+15s (15:49:12)] TIMELINE: PHASE 1 START — continuous load: 5 req/s × 180s (cold start)
+[T+42s (15:49:39)]   P1 FIRING | fired=123 | gpu_nodes=0 | vllm=0/1 Pending | workers=1 | queue=120
+[T+70s (15:50:07)]   P1 FIRING | fired=257 | gpu_nodes=0 | vllm=0/1 Pending | workers=1 | queue=254
+[T+97s (15:50:34)]   P1 FIRING | fired=392 | gpu_nodes=0 | vllm=0/1 Pending | workers=2 | queue=390
+[T+123s (15:51:00)]   P1 FIRING | fired=526 | gpu_nodes=0 | vllm=0/1 Pending | workers=2 | queue=524
+[T+149s (15:51:26)]   P1 FIRING | fired=659 | gpu_nodes=0 | vllm=0/1 Pending | workers=2 | queue=657
+[T+175s (15:51:52)]   P1 FIRING | fired=791 | gpu_nodes=0 | vllm=0/1 Pending | workers=2 | queue=789
+[T+197s (15:52:14)] PHASE 1 FIRE COMPLETE — 885 requests fired in 180s, waiting for GPU ready + queue drain
+[T+197s (15:52:14)] TIMELINE: PHASE 1 FIRE STOP — 885 requests fired, awaiting cold-start completion
+[T+226s (15:52:43)]   T+226s (15:52:43) | P1 DRAIN | gpu_nodes=0 | vllm=0/1 Pending | workers=2 | queue=885 | sample_done=0/5
+[T+256s (15:53:13)]   T+256s (15:53:13) | P1 DRAIN | gpu_nodes=0 | vllm=0/1 Pending | workers=2 | queue=885 | sample_done=0/5
+[T+285s (15:53:42)]   T+285s (15:53:42) | P1 DRAIN | gpu_nodes=0 | vllm=0/1 Pending | workers=2 | queue=885 | sample_done=0/5
+[T+315s (15:54:12)]   T+315s (15:54:12) | P1 DRAIN | gpu_nodes=0 | vllm=0/1 Pending | workers=2 | queue=885 | sample_done=0/5
+[T+345s (15:54:42)]   T+345s (15:54:42) | P1 DRAIN | gpu_nodes=0 | vllm=0/1 Pending | workers=2 | queue=885 | sample_done=0/5
+[T+375s (15:55:12)]   T+375s (15:55:12) | P1 DRAIN | gpu_nodes=0 | vllm=0/1 Pending | workers=2 | queue=885 | sample_done=0/5
+[T+404s (15:55:41)]   T+404s (15:55:41) | P1 DRAIN | gpu_nodes=0 | vllm=0/1 Pending | workers=2 | queue=885 | sample_done=0/5
+[T+436s (15:56:13)]   T+436s (15:56:13) | P1 DRAIN | gpu_nodes=0 | vllm=0/1 Pending | workers=2 | queue=885 | sample_done=0/5
+[T+465s (15:56:42)]   T+465s (15:56:42) | P1 DRAIN | gpu_nodes=0 | vllm=0/1 Pending | workers=2 | queue=885 | sample_done=0/5
+[T+497s (15:57:14)]   T+497s (15:57:14) | P1 DRAIN | gpu_nodes=1 | vllm=0/1 Pending | workers=2 | queue=885 | sample_done=0/5
+[T+526s (15:57:43)]   T+526s (15:57:43) | P1 DRAIN | gpu_nodes=1 | vllm=0/1 Pending | workers=2 | queue=885 | sample_done=0/5
+[T+555s (15:58:12)]   T+555s (15:58:12) | P1 DRAIN | gpu_nodes=1 | vllm=0/1 ContainerCreating | workers=2 | queue=885 | sample_done=0/5
+[T+592s (15:58:49)]   T+592s (15:58:49) | P1 DRAIN | gpu_nodes=1 | vllm=0/1 Running | workers=2 | queue=885 | sample_done=0/5
+[T+622s (15:59:19)]   T+622s (15:59:19) | P1 DRAIN | gpu_nodes=1 | vllm=0/1 Running | workers=2 | queue=885 | sample_done=0/5
+[T+651s (15:59:48)]   T+651s (15:59:48) | P1 DRAIN | gpu_nodes=1 | vllm=0/1 Running | workers=2 | queue=885 | sample_done=0/5
+[T+680s (16:00:17)]   T+680s (16:00:17) | P1 DRAIN | gpu_nodes=1 | vllm=0/1 Running | workers=2 | queue=885 | sample_done=0/5
+[T+710s (16:00:47)]   T+710s (16:00:47) | P1 DRAIN | gpu_nodes=1 | vllm=1/1 Running | workers=2 | queue=849 | sample_done=5/5
+[T+710s (16:00:47)] TIMELINE: vLLM READY — cold start = 710s
+[T+710s (16:00:47)] TIMELINE: PHASE 1 ALL SAMPLES COMPLETE — first completions at T+694s
+[T+739s (16:01:16)]   T+739s (16:01:16) | P1 DRAIN | gpu_nodes=1 | vllm=1/1 Running | workers=2 | queue=759 | sample_done=5/5
+[T+769s (16:01:46)]   T+769s (16:01:46) | P1 DRAIN | gpu_nodes=1 | vllm=1/1 Running | workers=2 | queue=672 | sample_done=5/5
+[T+798s (16:02:15)]   T+798s (16:02:15) | P1 DRAIN | gpu_nodes=1 | vllm=1/1 Running | workers=2 | queue=586 | sample_done=5/5
+[T+828s (16:02:45)]   T+828s (16:02:45) | P1 DRAIN | gpu_nodes=1 | vllm=1/1 Running | workers=2 | queue=498 | sample_done=5/5
+[T+858s (16:03:15)]   T+858s (16:03:15) | P1 DRAIN | gpu_nodes=1 | vllm=1/1 Running | workers=2 | queue=406 | sample_done=5/5
+[T+888s (16:03:45)]   T+888s (16:03:45) | P1 DRAIN | gpu_nodes=1 | vllm=1/1 Running | workers=2 | queue=319 | sample_done=5/5
+[T+903s (16:04:00)] COLD START TIMEOUT at 900s — breaking
+[T+903s (16:04:00)] TIMELINE: PHASE 1 TIMEOUT at 900s
+[T+903s (16:04:00)] TIMELINE: PHASE 1 DONE — 903s total, 885 requests fired
+[T+903s (16:04:00)] 
+[T+903s (16:04:00)] --- PHASE 1 K8S EVENTS SNAPSHOT ---
+AGE                    TYPE      REASON                     OBJECT   MESSAGE
+2026-04-06T15:49:19Z   Normal    SuccessfulCreate           <none>   Created pod: vllm-5596dcdf9-nh74l
+2026-04-06T15:49:19Z   Normal    KEDAScaleTargetActivated   <none>   Scaled apps/v1.Deployment llm-gateway/vllm from 0 to 1, triggered by s0-redis-inference_queue
+2026-04-06T15:49:19Z   Normal    ScalingReplicaSet          <none>   Scaled up replica set worker-7dd86685 from 0 to 1
+2026-04-06T15:49:19Z   Normal    KEDAScaleTargetActivated   <none>   Scaled apps/v1.Deployment llm-gateway/worker from 0 to 1, triggered by s0-redis-inference_queue
+2026-04-06T15:49:19Z   Normal    ScalingReplicaSet          <none>   Scaled up replica set vllm-5596dcdf9 from 0 to 1
+2026-04-06T15:49:19Z   Normal    SuccessfulCreate           <none>   Created pod: worker-7dd86685-2htf9
+2026-04-06T15:49:19Z   Normal    Scheduled                  <none>   Successfully assigned llm-gateway/worker-7dd86685-2htf9 to gke-llm-gateway-default-pool-6f613b15-p1kq
+2026-04-06T15:49:21Z   Normal    Created                    <none>   Container created
+2026-04-06T15:49:20Z   Normal    Pulled                     <none>   Container image "us-docker.pkg.dev/<project-id>/llm-gateway/worker:latest" already present on machine and can be accessed by the pod
+2026-04-06T15:49:21Z   Normal    Started                    <none>   Container started
+2026-04-06T15:49:34Z   Normal    NotTriggerScaleUp          <none>   Pod didn't trigger scale-up: 1 node(s) didn't match Pod's node affinity/selector, 1 in backoff after failed scale-up
+2026-04-06T15:49:34Z   Warning   FailedScaleUp              <none>   Node scale up in zones us-east1-d associated with this pod failed: GCE out of resources. Pod is at risk of not being scheduled.
+2026-04-06T15:50:20Z   Normal    Scheduled                  <none>   Successfully assigned llm-gateway/worker-7dd86685-r4rt4 to gke-llm-gateway-default-pool-6f613b15-p1kq
+2026-04-06T15:50:20Z   Normal    SuccessfulRescale          <none>   New size: 2; reason: external metric s0-redis-inference_queue(&LabelSelector{MatchLabels:map[string]string{scaledobject.keda.sh/name: worker-autoscaler,},MatchExpressions:[]LabelSelectorRequirement{},}) above target
+2026-04-06T15:50:20Z   Normal    SuccessfulCreate           <none>   Created pod: worker-7dd86685-r4rt4
+2026-04-06T15:50:20Z   Normal    ScalingReplicaSet          <none>   Scaled up replica set worker-7dd86685 from 1 to 2
+2026-04-06T15:50:21Z   Normal    Created                    <none>   Container created
+2026-04-06T15:50:21Z   Normal    Pulled                     <none>   Container image "us-docker.pkg.dev/<project-id>/llm-gateway/worker:latest" already present on machine and can be accessed by the pod
+2026-04-06T15:50:21Z   Normal    Started                    <none>   Container started
+2026-04-06T15:49:19Z   Warning   FailedScheduling           <none>   0/1 nodes are available: 1 node(s) didn't match Pod's node affinity/selector. no new claims to deallocate, preemption: 0/1 nodes are available: 1 Preemption is not helpful for scheduling.
+2026-04-06T15:49:21Z   Normal    TriggeredScaleUp           <none>   Pod triggered scale-up: [{https://www.googleapis.com/compute/v1/projects/<project-id>/zones/us-east1-d/instanceGroups/gke-llm-gateway-gpu-pool-016163f0-grp 0->1 (max: 1)}]
+2026-04-06T15:56:49Z   Warning   FailedScheduling           <none>   0/2 nodes are available: 1 node(s) didn't match Pod's node affinity/selector, 1 node(s) had untolerated taint(s). no new claims to deallocate, preemption: 0/2 nodes are available: 2 Preemption is not helpful for scheduling.
+2026-04-06T15:56:52Z   Warning   FailedScheduling           <none>   0/2 nodes are available: 1 Insufficient nvidia.com/gpu, 1 node(s) didn't match Pod's node affinity/selector. no new claims to deallocate, preemption: 0/2 nodes are available: 2 Preemption is not helpful for scheduling.
+2026-04-06T15:56:53Z   Normal    SuccessfulCreate           <none>   Created pod: dcgm-exporter-l7zwm
+2026-04-06T15:56:53Z   Normal    Scheduled                  <none>   Successfully assigned llm-gateway/dcgm-exporter-l7zwm to gke-llm-gateway-gpu-pool-016163f0-27ht
+2026-04-06T15:56:55Z   Normal    Pulling                    <none>   Pulling image "nvcr.io/nvidia/k8s/dcgm-exporter:3.3.5-3.4.1-ubuntu22.04"
+2026-04-06T15:57:05Z   Normal    UpdatedLoadBalancer        <none>   Updated load balancer with new hosts
+2026-04-06T15:57:42Z   Normal    Started                    <none>   Container started
+2026-04-06T15:57:42Z   Normal    Created                    <none>   Container created
+2026-04-06T15:57:42Z   Normal    Pulled                     <none>   Successfully pulled image "nvcr.io/nvidia/k8s/dcgm-exporter:3.3.5-3.4.1-ubuntu22.04" in 40.627s (47.183s including waiting). Image size: 819106510 bytes.
+2026-04-06T15:57:51Z   Normal    Scheduled                  <none>   Successfully assigned llm-gateway/vllm-5596dcdf9-nh74l to gke-llm-gateway-gpu-pool-016163f0-27ht
+2026-04-06T15:57:56Z   Normal    SuccessfulAttachVolume     <none>   AttachVolume.Attach succeeded for volume "pvc-fddf845f-0a5e-40fa-a285-533c75d8fe4a" 
+2026-04-06T15:58:02Z   Normal    Pulling                    <none>   Pulling image "us-docker.pkg.dev/<project-id>/llm-gateway/vllm-openai:latest"
+2026-04-06T15:58:09Z   Normal    Pulled                     <none>   Successfully pulled image "us-docker.pkg.dev/<project-id>/llm-gateway/vllm-openai:latest" in 7.23s (7.23s including waiting). Image size: 9577341348 bytes.
+2026-04-06T15:58:09Z   Normal    Created                    <none>   Container created
+2026-04-06T15:58:09Z   Normal    Started                    <none>   Container started
+2026-04-06T15:58:21Z   Warning   Unhealthy                  <none>   Readiness probe failed: Get "http://10.12.1.6:8000/health": dial tcp 10.12.1.6:8000: connect: connection refused
+[T+905s (16:04:02)] 
+[T+905s (16:04:02)] --- CLUSTER AUTOSCALER STATUS ---
+autoscalerStatus: Running
+clusterWide:
+  health:
+    lastProbeTime: "2026-04-06T16:04:04Z"
+    lastTransitionTime: "2026-04-06T08:49:08Z"
+    nodeCounts:
+      longUnregistered: 0
+      registered:
+        notStarted: 0
+        ready: 2
+        total: 2
+        unready:
+          resourceUnready: 0
+          total: 0
+      unregistered: 0
+    status: Healthy
+  scaleDown:
+    lastProbeTime: "2026-04-06T16:04:04Z"
+    lastTransitionTime: "2026-04-06T12:36:30Z"
+    status: NoCandidates
+  scaleUp:
+    lastProbeTime: "2026-04-06T16:04:04Z"
+    lastTransitionTime: "2026-04-06T15:57:56Z"
+    status: NoActivity
+nodeGroups:
+- health:
+    cloudProviderTarget: 1
+    lastProbeTime: "2026-04-06T16:04:04Z"
+    lastTransitionTime: null
+    maxSize: 1
+    minSize: 0
+    nodeCounts:
+      longUnregistered: 0
+      registered:
+        notStarted: 0
+        ready: 1
+        total: 1
+        unready:
+          resourceUnready: 0
+          total: 0
+      unregistered: 0
+    status: Healthy
+  name: https://www.googleapis.com/compute/v1/projects/<project-id>/zones/us-east1-d/instanceGroups/gke-llm-gateway-gpu-pool-016163f0-grp
+  scaleDown:
+    lastProbeTime: "2026-04-06T16:04:04Z"
+    lastTransitionTime: "2026-04-06T12:36:30Z"
+    status: NoCandidates
+  scaleUp:
+    backoffInfo: {}
+    lastProbeTime: "2026-04-06T16:04:04Z"
+    lastTransitionTime: "2026-04-06T15:57:56Z"
+    status: NoActivity
+- health:
+    cloudProviderTarget: 1
+    lastProbeTime: "2026-04-06T16:04:04Z"
+    lastTransitionTime: "2026-04-06T08:49:08Z"
+    maxSize: 2
+    minSize: 1
+    nodeCounts:
+      longUnregistered: 0
+      registered:
+        notStarted: 0
+        ready: 1
+        total: 1
+        unready:
+          resourceUnready: 0
+          total: 0
+      unregistered: 0
+    status: Healthy
+  name: https://www.googleapis.com/compute/v1/projects/<project-id>/zones/us-east1-d/instanceGroups/gke-llm-gateway-default-pool-6f613b15-grp
+  scaleDown:
+    lastProbeTime: "2026-04-06T16:04:04Z"
+    lastTransitionTime: "2026-04-06T09:04:31Z"
+    status: NoCandidates
+  scaleUp:
+    backoffInfo: {}
+    lastProbeTime: "2026-04-06T16:04:04Z"
+    lastTransitionTime: "2026-04-06T08:53:03Z"
+    status: NoActivity
+time: 2026-04-06 16:04:04.124329643 +0000 UTC
+
+[T+907s (16:04:04)] 
+[T+907s (16:04:04)] ============================================================
+[T+907s (16:04:04)] VALLEY GAP — sleeping 60s to create visible gap in metrics
+[T+907s (16:04:04)] ============================================================
+[T+907s (16:04:04)] TIMELINE: VALLEY GAP START — 60s pause
+[T+966s (16:05:03)] TIMELINE: VALLEY GAP END
+[T+966s (16:05:03)] 
+[T+966s (16:05:03)] ============================================================
+[T+966s (16:05:03)] PHASE 2: WARM CONTINUOUS LOAD — 5 req/s × 180s
+[T+966s (16:05:03)] ============================================================
+[T+973s (16:05:10)] State at fire: gpu_nodes=1 workers=2 vllm=1
+[T+973s (16:05:10)] TIMELINE: PHASE 2 START — continuous load: 5 req/s × 180s (warm GPU)
+[T+1000s (16:05:37)]   P2 FIRING | fired=142 | gpu_nodes=1 | vllm=1/1 Running | workers=2 | queue=114
+[T+1028s (16:06:05)]   P2 FIRING | fired=276 | gpu_nodes=1 | vllm=1/1 Running | workers=2 | queue=169
+[T+1055s (16:06:32)]   P2 FIRING | fired=413 | gpu_nodes=1 | vllm=1/1 Running | workers=2 | queue=227
+[T+1082s (16:06:59)]   P2 FIRING | fired=549 | gpu_nodes=1 | vllm=1/1 Running | workers=2 | queue=285
+[T+1109s (16:07:26)]   P2 FIRING | fired=686 | gpu_nodes=1 | vllm=1/1 Running | workers=2 | queue=342
+[T+1135s (16:07:52)]   P2 FIRING | fired=821 | gpu_nodes=1 | vllm=1/1 Running | workers=2 | queue=399
+[T+1155s (16:08:12)] PHASE 2 FIRE COMPLETE — 911 requests fired in 180s, entering drain
+[T+1155s (16:08:12)] TIMELINE: PHASE 2 FIRE STOP — 911 requests fired, queue draining
+[T+1180s (16:08:37)]   T+1180s (16:08:37) | P2 DRAIN | queue=379 | vllm=1 | workers=2 | drain_elapsed=25s
+[T+1203s (16:09:00)]   T+1203s (16:09:00) | P2 DRAIN | queue=307 | vllm=1 | workers=2 | drain_elapsed=48s
+[T+1226s (16:09:23)]   T+1226s (16:09:23) | P2 DRAIN | queue=237 | vllm=1 | workers=2 | drain_elapsed=71s
+[T+1250s (16:09:47)]   T+1250s (16:09:47) | P2 DRAIN | queue=165 | vllm=1 | workers=2 | drain_elapsed=95s
+[T+1274s (16:10:11)]   T+1274s (16:10:11) | P2 DRAIN | queue=95 | vllm=1 | workers=2 | drain_elapsed=119s
+[T+1298s (16:10:35)]   T+1298s (16:10:35) | P2 DRAIN | queue=26 | vllm=1 | workers=2 | drain_elapsed=143s
+[T+1321s (16:10:58)]   T+1321s (16:10:58) | P2 DRAIN | queue=0 | vllm=1 | workers=2 | drain_elapsed=166s
+[T+1321s (16:10:58)] TIMELINE: PHASE 2 DONE — 348s total (warm response time)
+[T+1321s (16:10:58)] 
+[T+1321s (16:10:58)] ============================================================
+[T+1321s (16:10:58)] COOL DOWN — waiting for pods + GPU node to scale to zero
+[T+1321s (16:10:58)] ============================================================
+[T+1321s (16:10:58)] TIMELINE: COOL DOWN START
+[T+1347s (16:11:24)]   T+1347s (16:11:24) | gpu_nodes=1 | vllm=1 | workers=2
+[T+1375s (16:11:52)]   T+1375s (16:11:52) | gpu_nodes=1 | vllm=1 | workers=2
+[T+1401s (16:12:18)]   T+1401s (16:12:18) | gpu_nodes=1 | vllm=1 | workers=2
+[T+1428s (16:12:45)]   T+1428s (16:12:45) | gpu_nodes=1 | vllm=1 | workers=2
+[T+1456s (16:13:13)]   T+1456s (16:13:13) | gpu_nodes=1 | vllm=1 | workers=2
+[T+1483s (16:13:40)]   T+1483s (16:13:40) | gpu_nodes=1 | vllm=1 | workers=2
+[T+1510s (16:14:07)]   T+1510s (16:14:07) | gpu_nodes=1 | vllm=1 | workers=2
+[T+1537s (16:14:34)]   T+1537s (16:14:34) | gpu_nodes=1 | vllm=1 | workers=2
+[T+1562s (16:14:59)]   T+1562s (16:14:59) | gpu_nodes=1 | vllm=1 | workers=2
+[T+1590s (16:15:27)]   T+1590s (16:15:27) | gpu_nodes=1 | vllm=1 | workers=2
+[T+1617s (16:15:54)]   T+1617s (16:15:54) | gpu_nodes=1 | vllm=0 | workers=3
+[T+1643s (16:16:20)]   T+1643s (16:16:20) | gpu_nodes=1 | vllm=0 | workers=1
+[T+1672s (16:16:49)]   T+1672s (16:16:49) | gpu_nodes=1 | vllm=0 | workers=0
+[T+1672s (16:16:49)] TIMELINE: PODS SCALED TO ZERO — KEDA cooldown complete at T+1672s
+[T+1699s (16:17:16)]   T+1699s (16:17:16) | gpu_nodes=1 | vllm=0 | workers=0
+[T+1725s (16:17:43)]   T+1725s (16:17:42) | gpu_nodes=1 | vllm=0 | workers=0
+[T+1752s (16:18:09)]   T+1752s (16:18:09) | gpu_nodes=1 | vllm=0 | workers=0
+[T+1779s (16:18:36)]   T+1779s (16:18:36) | gpu_nodes=1 | vllm=0 | workers=0
+[T+1806s (16:19:03)]   T+1806s (16:19:03) | gpu_nodes=1 | vllm=0 | workers=0
+[T+1833s (16:19:30)]   T+1833s (16:19:30) | gpu_nodes=1 | vllm=0 | workers=0
+[T+1860s (16:19:57)]   T+1860s (16:19:57) | gpu_nodes=1 | vllm=0 | workers=0
+[T+1889s (16:20:26)]   T+1889s (16:20:26) | gpu_nodes=1 | vllm=0 | workers=0
+[T+1916s (16:20:53)]   T+1916s (16:20:53) | gpu_nodes=1 | vllm=0 | workers=0
+[T+1943s (16:21:20)]   T+1943s (16:21:20) | gpu_nodes=1 | vllm=0 | workers=0
+[T+1971s (16:21:48)]   T+1971s (16:21:48) | gpu_nodes=1 | vllm=0 | workers=0
+[T+1997s (16:22:14)]   T+1997s (16:22:14) | gpu_nodes=1 | vllm=0 | workers=0
+[T+2024s (16:22:41)]   T+2024s (16:22:41) | gpu_nodes=1 | vllm=0 | workers=0
+[T+2052s (16:23:09)]   T+2052s (16:23:09) | gpu_nodes=1 | vllm=0 | workers=0
+[T+2079s (16:23:36)]   T+2079s (16:23:36) | gpu_nodes=1 | vllm=0 | workers=0
+[T+2106s (16:24:03)]   T+2106s (16:24:03) | gpu_nodes=1 | vllm=0 | workers=0
+[T+2135s (16:24:32)]   T+2135s (16:24:32) | gpu_nodes=1 | vllm=0 | workers=0
+[T+2162s (16:24:59)]   T+2162s (16:24:59) | gpu_nodes=1 | vllm=0 | workers=0
+[T+2189s (16:25:26)]   T+2189s (16:25:26) | gpu_nodes=1 | vllm=0 | workers=0
+[T+2217s (16:25:54)]   T+2217s (16:25:54) | gpu_nodes=1 | vllm=0 | workers=0
+[T+2244s (16:26:21)]   T+2244s (16:26:21) | gpu_nodes=1 | vllm=0 | workers=0
+[T+2272s (16:26:49)]   T+2272s (16:26:49) | gpu_nodes=0 | vllm=0 | workers=0
+[T+2272s (16:26:49)] TIMELINE: GPU NODE REMOVED — Cluster Autoscaler scale-down at T+2272s
+[T+2272s (16:26:49)] TIMELINE: COOL DOWN COMPLETE — full zero state
+[T+2272s (16:26:49)] 
+[T+2272s (16:26:49)] --- FINAL K8S EVENTS ---
+AGE                    TYPE      REASON                       OBJECT   MESSAGE
+2026-04-06T15:49:19Z   Normal    SuccessfulCreate             <none>   Created pod: vllm-5596dcdf9-nh74l
+2026-04-06T15:49:19Z   Normal    KEDAScaleTargetActivated     <none>   Scaled apps/v1.Deployment llm-gateway/worker from 0 to 1, triggered by s0-redis-inference_queue
+2026-04-06T15:49:19Z   Normal    SuccessfulCreate             <none>   Created pod: worker-7dd86685-2htf9
+2026-04-06T15:49:19Z   Normal    Scheduled                    <none>   Successfully assigned llm-gateway/worker-7dd86685-2htf9 to gke-llm-gateway-default-pool-6f613b15-p1kq
+2026-04-06T15:49:19Z   Normal    ScalingReplicaSet            <none>   Scaled up replica set vllm-5596dcdf9 from 0 to 1
+2026-04-06T15:49:19Z   Normal    KEDAScaleTargetActivated     <none>   Scaled apps/v1.Deployment llm-gateway/vllm from 0 to 1, triggered by s0-redis-inference_queue
+2026-04-06T15:49:21Z   Normal    Created                      <none>   Container created
+2026-04-06T15:49:20Z   Normal    Pulled                       <none>   Container image "us-docker.pkg.dev/<project-id>/llm-gateway/worker:latest" already present on machine and can be accessed by the pod
+2026-04-06T15:49:21Z   Normal    Started                      <none>   Container started
+2026-04-06T15:49:34Z   Warning   FailedScaleUp                <none>   Node scale up in zones us-east1-d associated with this pod failed: GCE out of resources. Pod is at risk of not being scheduled.
+2026-04-06T15:49:34Z   Normal    NotTriggerScaleUp            <none>   Pod didn't trigger scale-up: 1 node(s) didn't match Pod's node affinity/selector, 1 in backoff after failed scale-up
+2026-04-06T15:50:20Z   Normal    SuccessfulCreate             <none>   Created pod: worker-7dd86685-r4rt4
+2026-04-06T15:50:20Z   Normal    Scheduled                    <none>   Successfully assigned llm-gateway/worker-7dd86685-r4rt4 to gke-llm-gateway-default-pool-6f613b15-p1kq
+2026-04-06T15:50:20Z   Normal    ScalingReplicaSet            <none>   Scaled up replica set worker-7dd86685 from 1 to 2
+2026-04-06T15:50:20Z   Normal    SuccessfulRescale            <none>   New size: 2; reason: external metric s0-redis-inference_queue(&LabelSelector{MatchLabels:map[string]string{scaledobject.keda.sh/name: worker-autoscaler,},MatchExpressions:[]LabelSelectorRequirement{},}) above target
+2026-04-06T15:50:21Z   Normal    Started                      <none>   Container started
+2026-04-06T15:50:21Z   Normal    Pulled                       <none>   Container image "us-docker.pkg.dev/<project-id>/llm-gateway/worker:latest" already present on machine and can be accessed by the pod
+2026-04-06T15:50:21Z   Normal    Created                      <none>   Container created
+2026-04-06T15:49:19Z   Warning   FailedScheduling             <none>   0/1 nodes are available: 1 node(s) didn't match Pod's node affinity/selector. no new claims to deallocate, preemption: 0/1 nodes are available: 1 Preemption is not helpful for scheduling.
+2026-04-06T15:49:21Z   Normal    TriggeredScaleUp             <none>   Pod triggered scale-up: [{https://www.googleapis.com/compute/v1/projects/<project-id>/zones/us-east1-d/instanceGroups/gke-llm-gateway-gpu-pool-016163f0-grp 0->1 (max: 1)}]
+2026-04-06T15:56:49Z   Warning   FailedScheduling             <none>   0/2 nodes are available: 1 node(s) didn't match Pod's node affinity/selector, 1 node(s) had untolerated taint(s). no new claims to deallocate, preemption: 0/2 nodes are available: 2 Preemption is not helpful for scheduling.
+2026-04-06T15:56:52Z   Warning   FailedScheduling             <none>   0/2 nodes are available: 1 Insufficient nvidia.com/gpu, 1 node(s) didn't match Pod's node affinity/selector. no new claims to deallocate, preemption: 0/2 nodes are available: 2 Preemption is not helpful for scheduling.
+2026-04-06T15:56:53Z   Normal    Scheduled                    <none>   Successfully assigned llm-gateway/dcgm-exporter-l7zwm to gke-llm-gateway-gpu-pool-016163f0-27ht
+2026-04-06T15:56:53Z   Normal    SuccessfulCreate             <none>   Created pod: dcgm-exporter-l7zwm
+2026-04-06T15:56:55Z   Normal    Pulling                      <none>   Pulling image "nvcr.io/nvidia/k8s/dcgm-exporter:3.3.5-3.4.1-ubuntu22.04"
+2026-04-06T15:57:42Z   Normal    Pulled                       <none>   Successfully pulled image "nvcr.io/nvidia/k8s/dcgm-exporter:3.3.5-3.4.1-ubuntu22.04" in 40.627s (47.183s including waiting). Image size: 819106510 bytes.
+2026-04-06T15:57:42Z   Normal    Started                      <none>   Container started
+2026-04-06T15:57:42Z   Normal    Created                      <none>   Container created
+2026-04-06T15:57:51Z   Normal    Scheduled                    <none>   Successfully assigned llm-gateway/vllm-5596dcdf9-nh74l to gke-llm-gateway-gpu-pool-016163f0-27ht
+2026-04-06T15:57:56Z   Normal    SuccessfulAttachVolume       <none>   AttachVolume.Attach succeeded for volume "pvc-fddf845f-0a5e-40fa-a285-533c75d8fe4a" 
+2026-04-06T15:58:02Z   Normal    Pulling                      <none>   Pulling image "us-docker.pkg.dev/<project-id>/llm-gateway/vllm-openai:latest"
+2026-04-06T15:58:09Z   Normal    Started                      <none>   Container started
+2026-04-06T15:58:09Z   Normal    Created                      <none>   Container created
+2026-04-06T15:58:09Z   Normal    Pulled                       <none>   Successfully pulled image "us-docker.pkg.dev/<project-id>/llm-gateway/vllm-openai:latest" in 7.23s (7.23s including waiting). Image size: 9577341348 bytes.
+2026-04-06T16:15:19Z   Normal    SuccessfulDelete             <none>   Deleted pod: worker-7dd86685-2htf9
+2026-04-06T16:15:19Z   Normal    Killing                      <none>   Stopping container worker
+2026-04-06T16:15:19Z   Normal    KEDAScaleTargetDeactivated   <none>   Deactivated apps/v1.Deployment llm-gateway/worker from 2 to 0
+2026-04-06T16:15:19Z   Normal    KEDAScaleTargetDeactivated   <none>   Deactivated apps/v1.Deployment llm-gateway/vllm from 1 to 0
+2026-04-06T16:15:19Z   Normal    Killing                      <none>   Stopping container worker
+2026-04-06T16:15:19Z   Normal    SuccessfulDelete             <none>   Deleted pod: worker-7dd86685-r4rt4
+2026-04-06T16:15:19Z   Normal    Killing                      <none>   Stopping container vllm
+2026-04-06T16:15:19Z   Normal    SuccessfulDelete             <none>   Deleted pod: vllm-5596dcdf9-nh74l
+2026-04-06T16:15:19Z   Normal    ScalingReplicaSet            <none>   Scaled down replica set vllm-5596dcdf9 from 1 to 0
+2026-04-06T16:15:19Z   Normal    ScalingReplicaSet            <none>   Scaled down replica set worker-7dd86685 from 2 to 0
+2026-04-06T15:58:21Z   Warning   Unhealthy                    <none>   Readiness probe failed: Get "http://10.12.1.6:8000/health": dial tcp 10.12.1.6:8000: connect: connection refused
+2026-04-06T16:15:26Z   Normal    SuccessfulCreate             <none>   Created pod: worker-7dd86685-5mkmz
+2026-04-06T16:15:26Z   Normal    SuccessfulRescale            <none>   New size: 1; reason: external metric s0-redis-inference_queue(&LabelSelector{MatchLabels:map[string]string{scaledobject.keda.sh/name: worker-autoscaler,},MatchExpressions:[]LabelSelectorRequirement{},}) below target
+2026-04-06T15:49:19Z   Normal    ScalingReplicaSet            <none>   Scaled up replica set worker-7dd86685 from 0 to 1
+2026-04-06T16:15:26Z   Normal    Scheduled                    <none>   Successfully assigned llm-gateway/worker-7dd86685-5mkmz to gke-llm-gateway-default-pool-6f613b15-p1kq
+2026-04-06T16:15:27Z   Normal    Created                      <none>   Container created
+2026-04-06T16:15:27Z   Normal    Pulled                       <none>   Container image "us-docker.pkg.dev/<project-id>/llm-gateway/worker:latest" already present on machine and can be accessed by the pod
+2026-04-06T16:15:27Z   Normal    Started                      <none>   Container started
+2026-04-06T16:15:49Z   Normal    SuccessfulDelete             <none>   Deleted pod: worker-7dd86685-5mkmz
+2026-04-06T16:15:49Z   Normal    KEDAScaleTargetDeactivated   <none>   Deactivated apps/v1.Deployment llm-gateway/worker from 1 to 0
+2026-04-06T16:15:49Z   Normal    Killing                      <none>   Stopping container worker
+2026-04-06T16:15:49Z   Normal    ScalingReplicaSet            <none>   Scaled down replica set worker-7dd86685 from 1 to 0
+2026-04-06T16:25:34Z   Normal    ScaleDown                    <none>   deleting pod for node scale down
+2026-04-06T16:25:34Z   Normal    Killing                      <none>   Stopping container dcgm-exporter
+2026-04-06T15:57:05Z   Normal    UpdatedLoadBalancer          <none>   Updated load balancer with new hosts
+[T+2275s (16:26:52)] 
+[T+2275s (16:26:52)] --- FINAL NODES ---
+NAME                                         STATUS   ROLES    AGE     VERSION               INTERNAL-IP   EXTERNAL-IP     OS-IMAGE                             KERNEL-VERSION   CONTAINER-RUNTIME
+gke-llm-gateway-default-pool-6f613b15-p1kq   Ready    <none>   7h38m   v1.35.1-gke.1396002   10.142.0.15   <node-external-ip>   Container-Optimized OS from Google   6.12.55+         containerd://2.1.5
+[T+2278s (16:26:55)] 
+[T+2278s (16:26:55)] --- FINAL PODS ---
+NAME                          READY   STATUS    RESTARTS   AGE     IP           NODE                                         NOMINATED NODE   READINESS GATES
+gateway-56b748844f-rldpw      1/1     Running   0          7h22m   10.12.0.26   gke-llm-gateway-default-pool-6f613b15-p1kq   <none>           <none>
+grafana-6866797687-bzx4t      2/2     Running   0          154m    10.12.0.57   gke-llm-gateway-default-pool-6f613b15-p1kq   <none>           <none>
+prometheus-5d5d54674f-2mk99   1/1     Running   0          7h32m   10.12.0.21   gke-llm-gateway-default-pool-6f613b15-p1kq   <none>           <none>
+redis-7f6b49c679-5ndzn        2/2     Running   0          7h34m   10.12.0.18   gke-llm-gateway-default-pool-6f613b15-p1kq   <none>           <none>
+[T+2282s (16:26:59)] 
+[T+2282s (16:26:59)] --- CLUSTER AUTOSCALER FINAL STATUS ---
+autoscalerStatus: Running
+clusterWide:
+  health:
+    lastProbeTime: "2026-04-06T16:26:57Z"
+    lastTransitionTime: "2026-04-06T08:49:08Z"
+    nodeCounts:
+      longUnregistered: 0
+      registered:
+        notStarted: 0
+        ready: 1
+        total: 1
+        unready:
+          resourceUnready: 0
+          total: 0
+      unregistered: 0
+    status: Healthy
+  scaleDown:
+    lastProbeTime: "2026-04-06T16:26:57Z"
+    lastTransitionTime: "2026-04-06T16:25:34Z"
+    status: NoCandidates
+  scaleUp:
+    lastProbeTime: "2026-04-06T16:26:57Z"
+    lastTransitionTime: "2026-04-06T15:57:56Z"
+    status: NoActivity
+nodeGroups:
+- health:
+    cloudProviderTarget: 1
+    lastProbeTime: "2026-04-06T16:26:57Z"
+    lastTransitionTime: "2026-04-06T08:49:08Z"
+    maxSize: 2
+    minSize: 1
+    nodeCounts:
+      longUnregistered: 0
+      registered:
+        notStarted: 0
+        ready: 1
+        total: 1
+        unready:
+          resourceUnready: 0
+          total: 0
+      unregistered: 0
+    status: Healthy
+  name: https://www.googleapis.com/compute/v1/projects/<project-id>/zones/us-east1-d/instanceGroups/gke-llm-gateway-default-pool-6f613b15-grp
+  scaleDown:
+    lastProbeTime: "2026-04-06T16:26:57Z"
+    lastTransitionTime: "2026-04-06T09:04:31Z"
+    status: NoCandidates
+  scaleUp:
+    backoffInfo: {}
+    lastProbeTime: "2026-04-06T16:26:57Z"
+    lastTransitionTime: "2026-04-06T08:53:03Z"
+    status: NoActivity
+- health:
+    cloudProviderTarget: 0
+    lastProbeTime: null
+    lastTransitionTime: null
+    maxSize: 1
+    minSize: 0
+    nodeCounts:
+      longUnregistered: 0
+      registered:
+        notStarted: 0
+        ready: 0
+        total: 0
+        unready:
+          resourceUnready: 0
+          total: 0
+      unregistered: 0
+    status: Healthy
+  name: https://www.googleapis.com/compute/v1/projects/<project-id>/zones/us-east1-d/instanceGroups/gke-llm-gateway-gpu-pool-016163f0-grp
+  scaleDown:
+    lastProbeTime: "2026-04-06T16:26:57Z"
+    lastTransitionTime: "2026-04-06T16:25:34Z"
+    status: NoCandidates
+  scaleUp:
+    backoffInfo: {}
+    lastProbeTime: null
+    lastTransitionTime: "2026-04-06T15:57:56Z"
+    status: NoActivity
+time: 2026-04-06 16:26:57.059036791 +0000 UTC
+
+[T+2284s (16:27:01)] 
+[T+2284s (16:27:01)] ============================================================
+[T+2284s (16:27:01)] RUN COMPLETE — all output in data/run-20260406-224857
+[T+2284s (16:27:01)] ============================================================
+[T+2284s (16:27:01)] Cleaning up background processes...
+[T+2284s (16:27:01)] Capturing --previous logs for terminated pods...
+LOG INTEGRITY OK: all expected log files are non-empty

@@ -238,10 +238,10 @@ Scrape interval: 15s. Retention: 24h. No persistent storage (acceptable for demo
 ./scripts/full-cycle-run.sh [GATEWAY_IP]
 ```
 
-Each run writes a timestamped directory of log files (gitignored; not committed). The excerpts below are from the recorded run `run-20260406-190041`, the same run as the Grafana screenshots in the Demo section:
+Each run writes a timestamped directory of log files under `data/` (gitignored). The four recorded runs are committed under [docs/runs/](docs/runs/), with the gateway and node public IPs, the GCP project id and local home paths replaced by placeholders. The excerpts below are from `run-20260406-190041`, the same run as the Grafana screenshots in the Demo section:
 
 ```
-data/run-20260406-190041/
+docs/runs/run-20260406-190041/
 ├── full-cycle.log          # Main log with all phases and status polling
 ├── k8s-events.log          # Raw K8s events (watch stream, unfiltered)
 ├── keda-events.log         # KEDA ScaleTargetActivated/Deactivated events
@@ -459,6 +459,21 @@ Two phases (translucent blue regions) and three event lines tell the full story.
 
 Mid-cold-start, the Spot GPU node dropped out. At T+264s (12:05:05Z) the vLLM and DCGM exporter containers on it were killed, and by T+369s the cluster counted zero GPU nodes. No Preempted event was captured, so a Spot reclaim is inferred, not logged. GCE recreated the instance: the same node, `gke-llm-gateway-gpu-pool-016163f0-6r8w`, rejoined the cluster at 12:06:53Z, 108s after the containers stopped (the self-heal panel shows about 105s), and was Ready by 12:07:55Z, when the replacement vLLM pod was scheduled on it. The Cluster Autoscaler logged no new scale-up after 12:01:20Z; the vLLM Deployment had already created the replacement pod at 12:05:22Z, and it was serving at T+595s. The Redis queue held all 873 jobs through the gap and drained to zero by T+884s. The queue in front of the GPU tier is what let the jobs wait out the lost node.
 
+### Figures regenerated from the committed logs
+
+`scripts/plot_run.py` renders a run directory's queue depth, vLLM and worker replicas and GPU node count, with the load phases shaded and the milestones from `timeline.log` marked. Where the GPU node count drops to zero before cool down, it marks the node loss. For `run-20260406-224857`, the first run with a working vLLM log capture, it also plots generation tok/s.
+
+![run-20260406-190041 regenerated from the committed logs](docs/run-20260406-190041.png)
+
+![run-20260406-224857 regenerated from the committed logs](docs/run-20260406-224857.png)
+
+The DCGM and vLLM Prometheus panels cannot be rebuilt this way: no metrics export was kept. The total node count is not plotted, because `node-lifecycle.log` rows carry no timestamp.
+
+```bash
+pip install matplotlib
+python scripts/plot_run.py docs/runs/run-20260406-190041 docs/run-20260406-190041.png
+```
+
 ## Project Structure
 
 ```
@@ -475,8 +490,10 @@ gpu-autoscale-inference/
 │   ├── deploy-local.sh             # Local k3d deploy
 │   ├── destroy-local.sh            # Tear down local k3d cluster
 │   ├── build-node-cache.sh         # Build GKE secondary boot disk image
-│   └── full-cycle-run.sh           # Full-cycle demo with event logging
-├── docs/                            # Research docs + optimization write-up + dashboard screenshots
+│   ├── full-cycle-run.sh           # Full-cycle demo with event logging
+│   └── plot_run.py                 # Render a run directory's logs as a PNG
+├── docs/                            # Optimization write-up, dashboard screenshots, regenerated figures
+│   └── runs/                        # The four recorded runs (scrubbed logs)
 ├── data/                            # Runtime artifacts (gitignored)
 └── .env.example                    # Configuration template
 ```

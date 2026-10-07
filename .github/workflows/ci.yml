@@ -36,7 +36,7 @@ jobs:
             k8s/ monitoring/
 
       - name: Compile Python sources
-        run: python -m py_compile gateway/*.py worker/*.py loadtest/locustfile.py
+        run: python -m py_compile gateway/*.py worker/*.py loadtest/locustfile.py scripts/plot_run.py
 
       - name: shellcheck
         run: shellcheck -S warning scripts/*.sh

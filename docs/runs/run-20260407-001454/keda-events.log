@@ -1,0 +1,7 @@
+TIME                   REASON                     OBJECT            MESSAGE
+2026-04-06T17:15:19Z   KEDAScaleTargetActivated   vllm-autoscaler   Scaled apps/v1.Deployment llm-gateway/vllm from 0 to 1, triggered by s0-redis-inference_queue
+2026-04-06T17:15:19Z   KEDAScaleTargetActivated   worker-autoscaler   Scaled apps/v1.Deployment llm-gateway/worker from 0 to 1, triggered by s0-redis-inference_queue
+TIME                   REASON                       OBJECT            MESSAGE
+2026-04-06T16:15:19Z   KEDAScaleTargetDeactivated   vllm-autoscaler   Deactivated apps/v1.Deployment llm-gateway/vllm from 1 to 0
+2026-04-06T16:15:19Z   KEDAScaleTargetDeactivated   worker-autoscaler   Deactivated apps/v1.Deployment llm-gateway/worker from 2 to 0
+2026-04-06T16:15:49Z   KEDAScaleTargetDeactivated   worker-autoscaler   Deactivated apps/v1.Deployment llm-gateway/worker from 1 to 0

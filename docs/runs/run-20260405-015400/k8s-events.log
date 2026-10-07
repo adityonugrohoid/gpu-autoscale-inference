@@ -1,0 +1,86 @@
+TIME                   TYPE     REASON                     OBJECT   MESSAGE
+2026-04-04T18:54:21Z   Normal   KEDAScaleTargetActivated   <none>   Scaled apps/v1.Deployment llm-gateway/worker from 0 to 1, triggered by s0-redis-inference_queue
+2026-04-04T18:54:21Z   Normal   ScalingReplicaSet          <none>   Scaled up replica set worker-7dd86685 from 0 to 1
+2026-04-04T18:54:21Z   Normal   KEDAScaleTargetActivated   <none>   Scaled apps/v1.Deployment llm-gateway/vllm from 0 to 1, triggered by s0-redis-inference_queue
+2026-04-04T18:54:22Z   Normal   ScalingReplicaSet          <none>   Scaled up replica set vllm-5596dcdf9 from 0 to 1
+2026-04-04T18:54:22Z   Normal   SuccessfulCreate           <none>   Created pod: worker-7dd86685-7qzb2
+2026-04-04T18:54:22Z   Normal   Scheduled                  <none>   Successfully assigned llm-gateway/worker-7dd86685-7qzb2 to gke-llm-gateway-default-pool-c7094ff1-q852
+2026-04-04T18:54:22Z   Warning   FailedScheduling           <none>   0/2 nodes are available: 2 node(s) didn't match Pod's node affinity/selector. no new claims to deallocate, preemption: 0/2 nodes are available: 2 Preemption is not helpful for scheduling.
+2026-04-04T18:54:22Z   Normal    SuccessfulCreate           <none>   Created pod: vllm-5596dcdf9-p4dvb
+2026-04-04T18:54:22Z   Normal    Pulling                    <none>   Pulling image "us-docker.pkg.dev/<project-id>/llm-gateway/worker:latest"
+2026-04-04T18:54:24Z   Normal    TriggeredScaleUp           <none>   Pod triggered scale-up: [{https://www.googleapis.com/compute/v1/projects/<project-id>/zones/us-east1-d/instanceGroups/gke-llm-gateway-gpu-pool-ef999b86-grp 0->1 (max: 1)}]
+2026-04-04T18:54:25Z   Normal    Pulled                     <none>   Successfully pulled image "us-docker.pkg.dev/<project-id>/llm-gateway/worker:latest" in 2.24s (2.24s including waiting). Image size: 48981689 bytes.
+2026-04-04T18:54:25Z   Normal    Created                    <none>   Container created
+2026-04-04T18:54:25Z   Normal    Started                    <none>   Container started
+2026-04-04T18:55:13Z   Warning   FailedScheduling           <none>   0/3 nodes are available: 1 node(s) had untolerated taint(s), 2 node(s) didn't match Pod's node affinity/selector. no new claims to deallocate, preemption: 0/3 nodes are available: 3 Preemption is not helpful for scheduling.
+2026-04-04T18:55:14Z   Warning   FailedScheduling           <none>   0/3 nodes are available: 1 node(s) had untolerated taint(s), 2 node(s) didn't match Pod's node affinity/selector. no new claims to deallocate, preemption: 0/3 nodes are available: 3 Preemption is not helpful for scheduling.
+2026-04-04T18:55:15Z   Warning   FailedScheduling           <none>   0/3 nodes are available: 1 Insufficient nvidia.com/gpu, 2 node(s) didn't match Pod's node affinity/selector. no new claims to deallocate, preemption: 0/3 nodes are available: 3 Preemption is not helpful for scheduling.
+2026-04-04T18:55:15Z   Normal    SuccessfulCreate           <none>   Created pod: dcgm-exporter-6274z
+2026-04-04T18:55:15Z   Normal    Scheduled                  <none>   Successfully assigned llm-gateway/dcgm-exporter-6274z to gke-llm-gateway-gpu-pool-ef999b86-brz2
+2026-04-04T18:55:16Z   Normal    Pulling                    <none>   Pulling image "nvcr.io/nvidia/k8s/dcgm-exporter:3.3.5-3.4.1-ubuntu22.04"
+2026-04-04T18:55:29Z   Normal    UpdatedLoadBalancer        <none>   Updated load balancer with new hosts
+2026-04-04T18:55:29Z   Normal    UpdatedLoadBalancer        <none>   Updated load balancer with new hosts
+2026-04-04T18:56:01Z   Normal    Pulled                     <none>   Successfully pulled image "nvcr.io/nvidia/k8s/dcgm-exporter:3.3.5-3.4.1-ubuntu22.04" in 41.582s (44.772s including waiting). Image size: 819106510 bytes.
+2026-04-04T18:56:01Z   Normal    Created                    <none>   Container created
+2026-04-04T18:56:01Z   Normal    Started                    <none>   Container started
+2026-04-04T18:56:14Z   Normal    Scheduled                  <none>   Successfully assigned llm-gateway/vllm-5596dcdf9-p4dvb to gke-llm-gateway-gpu-pool-ef999b86-brz2
+2026-04-04T18:56:19Z   Normal    SuccessfulAttachVolume     <none>   AttachVolume.Attach succeeded for volume "pvc-56428e33-55b0-4bc1-957a-077a0b5c0ca0" 
+2026-04-04T18:56:26Z   Normal    Pulling                    <none>   Pulling image "us-docker.pkg.dev/<project-id>/llm-gateway/vllm-openai:latest"
+2026-04-04T18:56:33Z   Normal    Pulled                     <none>   Successfully pulled image "us-docker.pkg.dev/<project-id>/llm-gateway/vllm-openai:latest" in 6.392s (6.392s including waiting). Image size: 9577341348 bytes.
+2026-04-04T18:56:33Z   Normal    Created                    <none>   Container created
+2026-04-04T18:56:33Z   Normal    Started                    <none>   Container started
+2026-04-04T18:56:45Z   Warning   Unhealthy                  <none>   Readiness probe failed: Get "http://10.44.2.6:8000/health": dial tcp 10.44.2.6:8000: connect: connection refused
+2026-04-04T18:56:50Z   Warning   Unhealthy                  <none>   Readiness probe failed: Get "http://10.44.2.6:8000/health": dial tcp 10.44.2.6:8000: connect: connection refused
+2026-04-04T18:56:55Z   Warning   Unhealthy                  <none>   Readiness probe failed: Get "http://10.44.2.6:8000/health": dial tcp 10.44.2.6:8000: connect: connection refused
+2026-04-04T18:57:00Z   Warning   Unhealthy                  <none>   Readiness probe failed: Get "http://10.44.2.6:8000/health": dial tcp 10.44.2.6:8000: connect: connection refused
+2026-04-04T18:57:05Z   Warning   Unhealthy                  <none>   Readiness probe failed: Get "http://10.44.2.6:8000/health": dial tcp 10.44.2.6:8000: connect: connection refused
+2026-04-04T18:57:10Z   Warning   Unhealthy                  <none>   Readiness probe failed: Get "http://10.44.2.6:8000/health": dial tcp 10.44.2.6:8000: connect: connection refused
+2026-04-04T18:57:15Z   Warning   Unhealthy                  <none>   Readiness probe failed: Get "http://10.44.2.6:8000/health": dial tcp 10.44.2.6:8000: connect: connection refused
+2026-04-04T18:57:20Z   Warning   Unhealthy                  <none>   Readiness probe failed: Get "http://10.44.2.6:8000/health": dial tcp 10.44.2.6:8000: connect: connection refused
+2026-04-04T18:57:25Z   Warning   Unhealthy                  <none>   Readiness probe failed: Get "http://10.44.2.6:8000/health": dial tcp 10.44.2.6:8000: connect: connection refused
+2026-04-04T18:57:30Z   Warning   Unhealthy                  <none>   Readiness probe failed: Get "http://10.44.2.6:8000/health": dial tcp 10.44.2.6:8000: connect: connection refused
+2026-04-04T18:57:35Z   Warning   Unhealthy                  <none>   Readiness probe failed: Get "http://10.44.2.6:8000/health": dial tcp 10.44.2.6:8000: connect: connection refused
+2026-04-04T18:57:38Z   Warning   Unhealthy                  <none>   Readiness probe failed: Get "http://10.44.2.6:8000/health": dial tcp 10.44.2.6:8000: connect: connection refused
+2026-04-04T18:57:43Z   Warning   Unhealthy                  <none>   Readiness probe failed: Get "http://10.44.2.6:8000/health": dial tcp 10.44.2.6:8000: connect: connection refused
+2026-04-04T18:57:48Z   Warning   Unhealthy                  <none>   Readiness probe failed: Get "http://10.44.2.6:8000/health": dial tcp 10.44.2.6:8000: connect: connection refused
+2026-04-04T18:57:53Z   Warning   Unhealthy                  <none>   Readiness probe failed: Get "http://10.44.2.6:8000/health": dial tcp 10.44.2.6:8000: connect: connection refused
+2026-04-04T18:57:58Z   Warning   Unhealthy                  <none>   Readiness probe failed: Get "http://10.44.2.6:8000/health": dial tcp 10.44.2.6:8000: connect: connection refused
+2026-04-04T18:58:03Z   Warning   Unhealthy                  <none>   Readiness probe failed: Get "http://10.44.2.6:8000/health": dial tcp 10.44.2.6:8000: connect: connection refused
+2026-04-04T18:58:08Z   Warning   Unhealthy                  <none>   Readiness probe failed: Get "http://10.44.2.6:8000/health": dial tcp 10.44.2.6:8000: connect: connection refused
+2026-04-04T18:58:13Z   Warning   Unhealthy                  <none>   Readiness probe failed: Get "http://10.44.2.6:8000/health": dial tcp 10.44.2.6:8000: connect: connection refused
+2026-04-04T18:58:18Z   Warning   Unhealthy                  <none>   Readiness probe failed: Get "http://10.44.2.6:8000/health": dial tcp 10.44.2.6:8000: connect: connection refused
+2026-04-04T18:58:21Z   Normal    SuccessfulRescale          <none>   New size: 2; reason: external metric s0-redis-inference_queue(&LabelSelector{MatchLabels:map[string]string{scaledobject.keda.sh/name: worker-autoscaler,},MatchExpressions:[]LabelSelectorRequirement{},}) above target
+2026-04-04T18:58:21Z   Normal    ScalingReplicaSet          <none>   Scaled up replica set worker-7dd86685 from 1 to 2
+2026-04-04T18:58:22Z   Normal    SuccessfulCreate           <none>   Created pod: worker-7dd86685-dv899
+2026-04-04T18:58:22Z   Normal    Scheduled                  <none>   Successfully assigned llm-gateway/worker-7dd86685-dv899 to gke-llm-gateway-default-pool-c7094ff1-3gwm
+2026-04-04T18:58:22Z   Normal    Pulling                    <none>   Pulling image "us-docker.pkg.dev/<project-id>/llm-gateway/worker:latest"
+2026-04-04T18:58:23Z   Warning   Unhealthy                  <none>   Readiness probe failed: Get "http://10.44.2.6:8000/health": dial tcp 10.44.2.6:8000: connect: connection refused
+2026-04-04T18:58:28Z   Warning   Unhealthy                  <none>   Readiness probe failed: Get "http://10.44.2.6:8000/health": dial tcp 10.44.2.6:8000: connect: connection refused
+2026-04-04T18:58:28Z   Normal    Pulled                     <none>   Successfully pulled image "us-docker.pkg.dev/<project-id>/llm-gateway/worker:latest" in 5.726s (5.726s including waiting). Image size: 48981689 bytes.
+2026-04-04T18:58:28Z   Normal    Created                    <none>   Container created
+2026-04-04T18:58:28Z   Normal    Started                    <none>   Container started
+2026-04-04T18:58:33Z   Warning   Unhealthy                  <none>   Readiness probe failed: Get "http://10.44.2.6:8000/health": dial tcp 10.44.2.6:8000: connect: connection refused
+2026-04-04T18:58:38Z   Warning   Unhealthy                  <none>   Readiness probe failed: Get "http://10.44.2.6:8000/health": dial tcp 10.44.2.6:8000: connect: connection refused
+2026-04-04T18:58:43Z   Warning   Unhealthy                  <none>   Readiness probe failed: Get "http://10.44.2.6:8000/health": dial tcp 10.44.2.6:8000: connect: connection refused
+2026-04-04T19:03:51Z   Normal    KEDAScaleTargetDeactivated   <none>   Deactivated apps/v1.Deployment llm-gateway/worker from 2 to 0
+2026-04-04T19:03:51Z   Normal    ScalingReplicaSet            <none>   Scaled down replica set worker-7dd86685 from 2 to 0
+2026-04-04T19:03:51Z   Normal    SuccessfulDelete             <none>   Deleted pod: worker-7dd86685-7qzb2
+2026-04-04T19:03:51Z   Normal    Killing                      <none>   Stopping container worker
+2026-04-04T19:03:51Z   Normal    Killing                      <none>   Stopping container worker
+2026-04-04T19:03:51Z   Normal    SuccessfulDelete             <none>   Deleted pod: worker-7dd86685-dv899
+2026-04-04T19:03:51Z   Normal    KEDAScaleTargetDeactivated   <none>   Deactivated apps/v1.Deployment llm-gateway/vllm from 1 to 0
+2026-04-04T19:03:51Z   Normal    ScalingReplicaSet            <none>   Scaled down replica set vllm-5596dcdf9 from 1 to 0
+2026-04-04T19:03:51Z   Normal    SuccessfulDelete             <none>   Deleted pod: vllm-5596dcdf9-p4dvb
+2026-04-04T19:03:52Z   Normal    Killing                      <none>   Stopping container vllm
+2026-04-04T19:03:53Z   Warning   Unhealthy                    <none>   Readiness probe failed: Get "http://10.44.2.6:8000/health": dial tcp 10.44.2.6:8000: connect: connection refused
+2026-04-04T19:04:07Z   Normal    SuccessfulRescale            <none>   New size: 1; reason: external metric s0-redis-inference_queue(&LabelSelector{MatchLabels:map[string]string{scaledobject.keda.sh/name: worker-autoscaler,},MatchExpressions:[]LabelSelectorRequirement{},}) below target
+2026-04-04T19:04:07Z   Normal    ScalingReplicaSet            <none>   Scaled up replica set worker-7dd86685 from 0 to 1
+2026-04-04T19:04:07Z   Normal    SuccessfulCreate             <none>   Created pod: worker-7dd86685-z7zrw
+2026-04-04T19:04:07Z   Normal    Scheduled                    <none>   Successfully assigned llm-gateway/worker-7dd86685-z7zrw to gke-llm-gateway-default-pool-c7094ff1-q852
+2026-04-04T19:04:08Z   Normal    Pulled                       <none>   Container image "us-docker.pkg.dev/<project-id>/llm-gateway/worker:latest" already present on machine and can be accessed by the pod
+2026-04-04T19:04:08Z   Normal    Created                      <none>   Container created
+2026-04-04T19:04:08Z   Normal    Started                      <none>   Container started
+2026-04-04T19:04:21Z   Normal    KEDAScaleTargetDeactivated   <none>   Deactivated apps/v1.Deployment llm-gateway/worker from 1 to 0
+2026-04-04T19:04:21Z   Normal    ScalingReplicaSet            <none>   Scaled down replica set worker-7dd86685 from 1 to 0
+2026-04-04T19:04:21Z   Normal    SuccessfulDelete             <none>   Deleted pod: worker-7dd86685-z7zrw
+2026-04-04T19:04:21Z   Normal    Killing                      <none>   Stopping container worker

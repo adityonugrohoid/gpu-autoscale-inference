@@ -1,0 +1,7 @@
+# streamed pod logs for app=worker (started 2026-04-06T17:14:54Z)
+
+=== POD pod/worker-7dd86685-nn9dd START 2026-04-06T17:15:22Z ===
+2026-04-06T17:15:21.742034826Z Waiting for vLLM readiness...
+
+=== POD pod/worker-7dd86685-9gz9p START 2026-04-06T17:17:31Z ===
+2026-04-06T17:17:31.691666646Z Waiting for vLLM readiness...

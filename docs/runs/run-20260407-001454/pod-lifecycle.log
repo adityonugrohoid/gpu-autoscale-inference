@@ -1,0 +1,17 @@
+2026-04-06T17:15:34Z | vllm=0/1 Pending | workers=1 | gpu_nodes=0 | phase=1-firing
+2026-04-06T17:16:00Z | vllm=0/1 Pending | workers=1 | gpu_nodes=0 | phase=1-firing
+2026-04-06T17:16:26Z | vllm=0/1 Pending | workers=1 | gpu_nodes=0 | phase=1-firing
+2026-04-06T17:16:54Z | vllm=0/1 Pending | workers=1 | gpu_nodes=0 | phase=1-firing
+2026-04-06T17:17:21Z | vllm=0/1 Pending | workers=1 | gpu_nodes=0 | phase=1-firing
+2026-04-06T17:17:47Z | vllm=0/1 Pending | workers=2 | gpu_nodes=0 | phase=1-firing
+2026-04-06T17:18:39Z | vllm=0/1 Pending | workers=2 | gpu_nodes=0 | phase=1-drain
+2026-04-06T17:19:08Z | vllm=0/1 Pending | workers=2 | gpu_nodes=0 | phase=1-drain
+2026-04-06T17:19:37Z | vllm=0/1 Pending | workers=2 | gpu_nodes=0 | phase=1-drain
+2026-04-06T17:20:07Z | vllm=0/1 Pending | workers=2 | gpu_nodes=0 | phase=1-drain
+2026-04-06T17:20:37Z | vllm=0/1 Pending | workers=2 | gpu_nodes=0 | phase=1-drain
+2026-04-06T17:21:05Z | vllm=0/1 Pending | workers=2 | gpu_nodes=0 | phase=1-drain
+2026-04-06T17:21:37Z | vllm=0/1 Pending | workers=2 | gpu_nodes=0 | phase=1-drain
+2026-04-06T17:22:07Z | vllm=0/1 Pending | workers=2 | gpu_nodes=0 | phase=1-drain
+2026-04-06T17:22:37Z | vllm=0/1 Pending | workers=2 | gpu_nodes=0 | phase=1-drain
+2026-04-06T17:23:06Z | vllm=0/1 Pending | workers=2 | gpu_nodes=0 | phase=1-drain
+2026-04-06T17:23:35Z | vllm=0/1 Pending | workers=2 | gpu_nodes=0 | phase=1-drain

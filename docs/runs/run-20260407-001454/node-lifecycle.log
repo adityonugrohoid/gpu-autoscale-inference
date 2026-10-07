@@ -1,0 +1,5 @@
+gke-llm-gateway-default-pool-6f613b15-p1kq   Ready   True   2026-04-06T08:48:43Z
+TIME                   REASON             MESSAGE
+2026-04-06T17:15:21Z   TriggeredScaleUp   Pod triggered scale-up: [{https://www.googleapis.com/compute/v1/projects/<project-id>/zones/us-east1-d/instanceGroups/gke-llm-gateway-gpu-pool-016163f0-grp 0->1 (max: 1)}]
+gke-llm-gateway-default-pool-6f613b15-p1kq   Ready   True   2026-04-06T08:48:43Z
+gke-llm-gateway-default-pool-6f613b15-p1kq   Ready   True   2026-04-06T08:48:43Z

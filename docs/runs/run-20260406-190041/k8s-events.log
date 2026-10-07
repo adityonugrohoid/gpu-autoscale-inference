@@ -1,0 +1,203 @@
+TIME                   TYPE     REASON             OBJECT   MESSAGE
+2026-04-06T11:00:20Z   Normal   TriggeredScaleUp   <none>   Pod triggered scale-up: [{https://www.googleapis.com/compute/v1/projects/<project-id>/zones/us-east1-d/instanceGroups/gke-llm-gateway-gpu-pool-016163f0-grp 0->1 (max: 1)}]
+2026-04-06T12:01:19Z   Normal   ScalingReplicaSet   <none>   Scaled up replica set vllm-5596dcdf9 from 0 to 1
+2026-04-06T11:00:19Z   Warning   FailedScheduling    <none>   0/1 nodes are available: 1 node(s) didn't match Pod's node affinity/selector. no new claims to deallocate, preemption: 0/1 nodes are available: 1 Preemption is not helpful for scheduling.
+2026-04-06T12:01:19Z   Normal    KEDAScaleTargetActivated   <none>   Scaled apps/v1.Deployment llm-gateway/vllm from 0 to 1, triggered by s0-redis-inference_queue
+2026-04-06T11:00:44Z   Normal    Scheduled                  <none>   Successfully assigned llm-gateway/worker-7dd86685-tvrz7 to gke-llm-gateway-default-pool-6f613b15-p1kq
+2026-04-06T11:00:45Z   Normal    Pulled                     <none>   Container image "us-docker.pkg.dev/<project-id>/llm-gateway/worker:latest" already present on machine and can be accessed by the pod
+2026-04-06T11:00:19Z   Normal    SuccessfulCreate           <none>   Created pod: worker-7dd86685-plwcb
+2026-04-06T11:00:19Z   Normal    Scheduled                  <none>   Successfully assigned llm-gateway/worker-7dd86685-plwcb to gke-llm-gateway-default-pool-6f613b15-p1kq
+2026-04-06T11:00:19Z   Normal    SuccessfulCreate           <none>   Created pod: vllm-5596dcdf9-bwd4z
+2026-04-06T11:00:20Z   Normal    Started                    <none>   Container started
+2026-04-06T11:00:20Z   Normal    Pulled                     <none>   Container image "us-docker.pkg.dev/<project-id>/llm-gateway/worker:latest" already present on machine and can be accessed by the pod
+2026-04-06T11:00:44Z   Normal    SuccessfulCreate           <none>   Created pod: worker-7dd86685-tvrz7
+2026-04-06T11:00:20Z   Normal    Created                    <none>   Container created
+2026-04-06T11:00:45Z   Normal    Started                    <none>   Container started
+2026-04-06T11:00:45Z   Normal    Created                    <none>   Container created
+2026-04-06T12:01:19Z   Normal    SuccessfulCreate           <none>   Created pod: vllm-5596dcdf9-v2w95
+2026-04-06T12:01:19Z   Warning   FailedScheduling           <none>   0/1 nodes are available: 1 node(s) didn't match Pod's node affinity/selector. no new claims to deallocate, preemption: 0/1 nodes are available: 1 Preemption is not helpful for scheduling.
+2026-04-06T12:01:19Z   Normal    KEDAScaleTargetActivated   <none>   Scaled apps/v1.Deployment llm-gateway/worker from 0 to 1, triggered by s0-redis-inference_queue
+2026-04-06T12:01:19Z   Normal    ScalingReplicaSet          <none>   Scaled up replica set worker-7dd86685 from 0 to 1
+2026-04-06T12:01:19Z   Normal    SuccessfulCreate           <none>   Created pod: worker-7dd86685-8t86n
+2026-04-06T12:01:19Z   Normal    Scheduled                  <none>   Successfully assigned llm-gateway/worker-7dd86685-8t86n to gke-llm-gateway-default-pool-6f613b15-p1kq
+2026-04-06T12:01:20Z   Normal    TriggeredScaleUp           <none>   Pod triggered scale-up: [{https://www.googleapis.com/compute/v1/projects/<project-id>/zones/us-east1-d/instanceGroups/gke-llm-gateway-gpu-pool-016163f0-grp 0->1 (max: 1)}]
+2026-04-06T12:01:20Z   Normal    Pulled                     <none>   Container image "us-docker.pkg.dev/<project-id>/llm-gateway/worker:latest" already present on machine and can be accessed by the pod
+2026-04-06T12:01:20Z   Normal    Created                    <none>   Container created
+2026-04-06T12:01:21Z   Normal    Started                    <none>   Container started
+2026-04-06T12:01:49Z   Normal    SuccessfulRescale          <none>   New size: 2; reason: external metric s0-redis-inference_queue(&LabelSelector{MatchLabels:map[string]string{scaledobject.keda.sh/name: worker-autoscaler,},MatchExpressions:[]LabelSelectorRequirement{},}) above target
+2026-04-06T12:01:49Z   Normal    ScalingReplicaSet          <none>   Scaled up replica set worker-7dd86685 from 1 to 2
+2026-04-06T12:01:49Z   Normal    SuccessfulCreate           <none>   Created pod: worker-7dd86685-s9pnx
+2026-04-06T12:01:49Z   Normal    Scheduled                  <none>   Successfully assigned llm-gateway/worker-7dd86685-s9pnx to gke-llm-gateway-default-pool-6f613b15-p1kq
+2026-04-06T12:01:50Z   Normal    Pulled                     <none>   Container image "us-docker.pkg.dev/<project-id>/llm-gateway/worker:latest" already present on machine and can be accessed by the pod
+2026-04-06T12:01:50Z   Normal    Created                    <none>   Container created
+2026-04-06T12:01:50Z   Normal    Started                    <none>   Container started
+2026-04-06T12:02:12Z   Warning   FailedScheduling           <none>   0/2 nodes are available: 1 node(s) didn't match Pod's node affinity/selector, 1 node(s) had untolerated taint(s). no new claims to deallocate, preemption: 0/2 nodes are available: 2 Preemption is not helpful for scheduling.
+2026-04-06T12:02:13Z   Warning   FailedScheduling           <none>   0/2 nodes are available: 1 node(s) didn't match Pod's node affinity/selector, 1 node(s) had untolerated taint(s). no new claims to deallocate, preemption: 0/2 nodes are available: 2 Preemption is not helpful for scheduling.
+2026-04-06T12:02:15Z   Warning   FailedScheduling           <none>   0/2 nodes are available: 1 Insufficient nvidia.com/gpu, 1 node(s) didn't match Pod's node affinity/selector. no new claims to deallocate, preemption: 0/2 nodes are available: 2 Preemption is not helpful for scheduling.
+2026-04-06T12:02:15Z   Normal    SuccessfulCreate           <none>   Created pod: dcgm-exporter-95p5h
+2026-04-06T12:02:15Z   Normal    Scheduled                  <none>   Successfully assigned llm-gateway/dcgm-exporter-95p5h to gke-llm-gateway-gpu-pool-016163f0-6r8w
+2026-04-06T12:02:17Z   Normal    Pulling                    <none>   Pulling image "nvcr.io/nvidia/k8s/dcgm-exporter:3.3.5-3.4.1-ubuntu22.04"
+2026-04-06T12:02:27Z   Normal    UpdatedLoadBalancer        <none>   Updated load balancer with new hosts
+2026-04-06T12:02:28Z   Normal    UpdatedLoadBalancer        <none>   Updated load balancer with new hosts
+2026-04-06T12:02:58Z   Normal    Pulled                     <none>   Successfully pulled image "nvcr.io/nvidia/k8s/dcgm-exporter:3.3.5-3.4.1-ubuntu22.04" in 40.606s (40.611s including waiting). Image size: 819106510 bytes.
+2026-04-06T12:02:59Z   Normal    Created                    <none>   Container created
+2026-04-06T12:03:00Z   Normal    Started                    <none>   Container started
+2026-04-06T12:03:14Z   Normal    Scheduled                  <none>   Successfully assigned llm-gateway/vllm-5596dcdf9-v2w95 to gke-llm-gateway-gpu-pool-016163f0-6r8w
+2026-04-06T12:03:17Z   Normal    SuccessfulAttachVolume     <none>   AttachVolume.Attach succeeded for volume "pvc-fddf845f-0a5e-40fa-a285-533c75d8fe4a" 
+2026-04-06T12:03:25Z   Normal    Pulling                    <none>   Pulling image "us-docker.pkg.dev/<project-id>/llm-gateway/vllm-openai:latest"
+2026-04-06T12:03:33Z   Normal    Pulled                     <none>   Successfully pulled image "us-docker.pkg.dev/<project-id>/llm-gateway/vllm-openai:latest" in 7.62s (7.62s including waiting). Image size: 9577341348 bytes.
+2026-04-06T12:03:33Z   Normal    Created                    <none>   Container created
+2026-04-06T12:03:33Z   Normal    Started                    <none>   Container started
+2026-04-06T12:03:44Z   Warning   Unhealthy                  <none>   Readiness probe failed: Get "http://10.12.1.6:8000/health": dial tcp 10.12.1.6:8000: connect: connection refused
+2026-04-06T11:02:52Z   Normal    SuccessfulCreate           <none>   Created pod: dcgm-exporter-7jdrb
+2026-04-06T11:02:52Z   Normal    Scheduled                  <none>   Successfully assigned llm-gateway/dcgm-exporter-7jdrb to gke-llm-gateway-gpu-pool-016163f0-9jnf
+2026-04-06T11:03:40Z   Normal    Created                    <none>   Container created
+2026-04-06T11:02:50Z   Warning   FailedScheduling           <none>   0/2 nodes are available: 1 node(s) didn't match Pod's node affinity/selector, 1 node(s) had untolerated taint(s). no new claims to deallocate, preemption: 0/2 nodes are available: 2 Preemption is not helpful for scheduling.
+2026-04-06T12:03:49Z   Warning   Unhealthy                  <none>   Readiness probe failed: Get "http://10.12.1.6:8000/health": dial tcp 10.12.1.6:8000: connect: connection refused
+2026-04-06T11:02:54Z   Normal    Pulling                    <none>   Pulling image "nvcr.io/nvidia/k8s/dcgm-exporter:3.3.5-3.4.1-ubuntu22.04"
+2026-04-06T11:03:40Z   Normal    Started                    <none>   Container started
+2026-04-06T11:03:38Z   Normal    Pulled                     <none>   Successfully pulled image "nvcr.io/nvidia/k8s/dcgm-exporter:3.3.5-3.4.1-ubuntu22.04" in 41.308s (43.528s including waiting). Image size: 819106510 bytes.
+2026-04-06T11:02:52Z   Warning   FailedScheduling           <none>   0/2 nodes are available: 1 Insufficient nvidia.com/gpu, 1 node(s) didn't match Pod's node affinity/selector. no new claims to deallocate, preemption: 0/2 nodes are available: 2 Preemption is not helpful for scheduling.
+2026-04-06T12:03:54Z   Warning   Unhealthy                  <none>   Readiness probe failed: Get "http://10.12.1.6:8000/health": dial tcp 10.12.1.6:8000: connect: connection refused
+2026-04-06T12:03:59Z   Warning   Unhealthy                  <none>   Readiness probe failed: Get "http://10.12.1.6:8000/health": dial tcp 10.12.1.6:8000: connect: connection refused
+2026-04-06T12:04:04Z   Warning   Unhealthy                  <none>   Readiness probe failed: Get "http://10.12.1.6:8000/health": dial tcp 10.12.1.6:8000: connect: connection refused
+2026-04-06T12:04:09Z   Warning   Unhealthy                  <none>   Readiness probe failed: Get "http://10.12.1.6:8000/health": dial tcp 10.12.1.6:8000: connect: connection refused
+2026-04-06T12:04:14Z   Warning   Unhealthy                  <none>   Readiness probe failed: Get "http://10.12.1.6:8000/health": dial tcp 10.12.1.6:8000: connect: connection refused
+2026-04-06T12:04:19Z   Warning   Unhealthy                  <none>   Readiness probe failed: Get "http://10.12.1.6:8000/health": dial tcp 10.12.1.6:8000: connect: connection refused
+2026-04-06T12:04:24Z   Warning   Unhealthy                  <none>   Readiness probe failed: Get "http://10.12.1.6:8000/health": dial tcp 10.12.1.6:8000: connect: connection refused
+2026-04-06T12:04:29Z   Warning   Unhealthy                  <none>   Readiness probe failed: Get "http://10.12.1.6:8000/health": dial tcp 10.12.1.6:8000: connect: connection refused
+2026-04-06T12:04:34Z   Warning   Unhealthy                  <none>   Readiness probe failed: Get "http://10.12.1.6:8000/health": dial tcp 10.12.1.6:8000: connect: connection refused
+2026-04-06T12:04:39Z   Warning   Unhealthy                  <none>   Readiness probe failed: Get "http://10.12.1.6:8000/health": dial tcp 10.12.1.6:8000: connect: connection refused
+2026-04-06T12:04:44Z   Warning   Unhealthy                  <none>   Readiness probe failed: Get "http://10.12.1.6:8000/health": dial tcp 10.12.1.6:8000: connect: connection refused
+2026-04-06T11:04:09Z   Normal    Created                    <none>   Container created
+2026-04-06T11:03:56Z   Normal    SuccessfulAttachVolume     <none>   AttachVolume.Attach succeeded for volume "pvc-fddf845f-0a5e-40fa-a285-533c75d8fe4a" 
+2026-04-06T11:04:09Z   Normal    Started                    <none>   Container started
+2026-04-06T11:03:50Z   Normal    Scheduled                  <none>   Successfully assigned llm-gateway/vllm-5596dcdf9-bwd4z to gke-llm-gateway-gpu-pool-016163f0-9jnf
+2026-04-06T11:04:02Z   Normal    Pulling                    <none>   Pulling image "us-docker.pkg.dev/<project-id>/llm-gateway/vllm-openai:latest"
+2026-04-06T11:04:09Z   Normal    Pulled                     <none>   Successfully pulled image "us-docker.pkg.dev/<project-id>/llm-gateway/vllm-openai:latest" in 7.251s (7.251s including waiting). Image size: 9577341348 bytes.
+2026-04-06T12:04:49Z   Warning   Unhealthy                  <none>   Readiness probe failed: Get "http://10.12.1.6:8000/health": dial tcp 10.12.1.6:8000: connect: connection refused
+2026-04-06T12:04:54Z   Warning   Unhealthy                  <none>   Readiness probe failed: Get "http://10.12.1.6:8000/health": dial tcp 10.12.1.6:8000: connect: connection refused
+2026-04-06T12:04:59Z   Warning   Unhealthy                  <none>   Readiness probe failed: Get "http://10.12.1.6:8000/health": dial tcp 10.12.1.6:8000: connect: connection refused
+2026-04-06T12:05:03Z   Warning   Unhealthy                  <none>   Readiness probe failed: Get "http://10.12.1.6:8000/health": dial tcp 10.12.1.6:8000: connect: connection refused
+2026-04-06T12:05:05Z   Normal    Killing                    <none>   Stopping container dcgm-exporter
+2026-04-06T12:05:05Z   Normal    Killing                    <none>   Stopping container vllm
+2026-04-06T12:05:05Z   Warning   Unhealthy                  <none>   Readiness probe failed: Get "http://10.12.1.6:8000/health": dial tcp 10.12.1.6:8000: connect: connection refused
+2026-04-06T12:05:06Z   Normal    SucceededDaemonPod         <none>   Found succeeded daemon pod llm-gateway/dcgm-exporter-95p5h on node gke-llm-gateway-gpu-pool-016163f0-6r8w, will try to delete it
+2026-04-06T12:05:07Z   Normal    SuccessfulDelete           <none>   Deleted pod: dcgm-exporter-95p5h
+2026-04-06T12:05:22Z   Normal    SuccessfulCreate           <none>   Created pod: vllm-5596dcdf9-mmrvp
+2026-04-06T12:05:22Z   Warning   FailedScheduling           <none>   0/2 nodes are available: 1 node(s) didn't match Pod's node affinity/selector, 1 node(s) had untolerated taint(s). no new claims to deallocate, preemption: 0/2 nodes are available: 2 Preemption is not helpful for scheduling.
+2026-04-06T12:06:36Z   Normal    UpdatedLoadBalancer        <none>   Updated load balancer with new hosts
+2026-04-06T12:06:48Z   Normal    TaintManagerEviction       <none>   Cancelling deletion of Pod llm-gateway/vllm-5596dcdf9-v2w95
+2026-04-06T12:06:53Z   Warning   FailedScheduling           <none>   0/2 nodes are available: 1 node(s) didn't match Pod's node affinity/selector, 1 node(s) had untolerated taint(s). no new claims to deallocate, preemption: 0/2 nodes are available: 2 Preemption is not helpful for scheduling.
+2026-04-06T12:06:54Z   Warning   FailedScheduling           <none>   0/2 nodes are available: 1 node(s) didn't match Pod's node affinity/selector, 1 node(s) had untolerated taint(s). no new claims to deallocate, preemption: 0/2 nodes are available: 2 Preemption is not helpful for scheduling.
+2026-04-06T12:06:56Z   Warning   FailedScheduling           <none>   0/2 nodes are available: 1 Insufficient nvidia.com/gpu, 1 node(s) didn't match Pod's node affinity/selector. no new claims to deallocate, preemption: 0/2 nodes are available: 2 Preemption is not helpful for scheduling.
+2026-04-06T12:06:56Z   Warning   FailedScheduling           <none>   0/2 nodes are available: 1 Insufficient nvidia.com/gpu, 1 node(s) didn't match Pod's node affinity/selector. no new claims to deallocate, preemption: 0/2 nodes are available: 2 Preemption is not helpful for scheduling.
+2026-04-06T12:06:56Z   Normal    SuccessfulCreate           <none>   Created pod: dcgm-exporter-x58tw
+2026-04-06T12:06:56Z   Normal    Scheduled                  <none>   Successfully assigned llm-gateway/dcgm-exporter-x58tw to gke-llm-gateway-gpu-pool-016163f0-6r8w
+2026-04-06T12:06:58Z   Normal    Pulling                    <none>   Pulling image "nvcr.io/nvidia/k8s/dcgm-exporter:3.3.5-3.4.1-ubuntu22.04"
+2026-04-06T12:07:00Z   Warning   FailedScheduling           <none>   0/2 nodes are available: 1 Insufficient nvidia.com/gpu, 1 node(s) didn't match Pod's node affinity/selector. no new claims to deallocate, preemption: 0/2 nodes are available: 2 Preemption is not helpful for scheduling.
+2026-04-06T12:07:09Z   Normal    UpdatedLoadBalancer        <none>   Updated load balancer with new hosts
+2026-04-06T12:07:09Z   Normal    UpdatedLoadBalancer        <none>   Updated load balancer with new hosts
+2026-04-06T12:07:39Z   Normal    Pulled                     <none>   Successfully pulled image "nvcr.io/nvidia/k8s/dcgm-exporter:3.3.5-3.4.1-ubuntu22.04" in 39.915s (41.042s including waiting). Image size: 819106510 bytes.
+2026-04-06T12:07:39Z   Normal    Created                    <none>   Container created
+2026-04-06T12:07:40Z   Normal    Started                    <none>   Container started
+2026-04-06T12:07:55Z   Normal    Scheduled                  <none>   Successfully assigned llm-gateway/vllm-5596dcdf9-mmrvp to gke-llm-gateway-gpu-pool-016163f0-6r8w
+2026-04-06T12:07:59Z   Normal    SuccessfulAttachVolume     <none>   AttachVolume.Attach succeeded for volume "pvc-fddf845f-0a5e-40fa-a285-533c75d8fe4a" 
+2026-04-06T12:08:07Z   Normal    Pulling                    <none>   Pulling image "us-docker.pkg.dev/<project-id>/llm-gateway/vllm-openai:latest"
+2026-04-06T12:08:14Z   Normal    Pulled                     <none>   Successfully pulled image "us-docker.pkg.dev/<project-id>/llm-gateway/vllm-openai:latest" in 7.016s (7.016s including waiting). Image size: 9577341348 bytes.
+2026-04-06T12:08:14Z   Normal    Created                    <none>   Container created
+2026-04-06T12:08:14Z   Normal    Started                    <none>   Container started
+2026-04-06T12:08:26Z   Warning   Unhealthy                  <none>   Readiness probe failed: Get "http://10.12.1.6:8000/health": dial tcp 10.12.1.6:8000: connect: connection refused
+2026-04-06T12:08:31Z   Warning   Unhealthy                  <none>   Readiness probe failed: Get "http://10.12.1.6:8000/health": dial tcp 10.12.1.6:8000: connect: connection refused
+2026-04-06T12:08:36Z   Warning   Unhealthy                  <none>   Readiness probe failed: Get "http://10.12.1.6:8000/health": dial tcp 10.12.1.6:8000: connect: connection refused
+2026-04-06T12:08:41Z   Warning   Unhealthy                  <none>   Readiness probe failed: Get "http://10.12.1.6:8000/health": dial tcp 10.12.1.6:8000: connect: connection refused
+2026-04-06T12:08:46Z   Warning   Unhealthy                  <none>   Readiness probe failed: Get "http://10.12.1.6:8000/health": dial tcp 10.12.1.6:8000: connect: connection refused
+2026-04-06T12:08:51Z   Warning   Unhealthy                  <none>   Readiness probe failed: Get "http://10.12.1.6:8000/health": dial tcp 10.12.1.6:8000: connect: connection refused
+2026-04-06T12:08:56Z   Warning   Unhealthy                  <none>   Readiness probe failed: Get "http://10.12.1.6:8000/health": dial tcp 10.12.1.6:8000: connect: connection refused
+2026-04-06T12:09:01Z   Warning   Unhealthy                  <none>   Readiness probe failed: Get "http://10.12.1.6:8000/health": dial tcp 10.12.1.6:8000: connect: connection refused
+2026-04-06T12:09:06Z   Warning   Unhealthy                  <none>   Readiness probe failed: Get "http://10.12.1.6:8000/health": dial tcp 10.12.1.6:8000: connect: connection refused
+2026-04-06T12:09:11Z   Warning   Unhealthy                  <none>   Readiness probe failed: Get "http://10.12.1.6:8000/health": dial tcp 10.12.1.6:8000: connect: connection refused
+2026-04-06T12:09:16Z   Warning   Unhealthy                  <none>   Readiness probe failed: Get "http://10.12.1.6:8000/health": dial tcp 10.12.1.6:8000: connect: connection refused
+2026-04-06T12:09:21Z   Warning   Unhealthy                  <none>   Readiness probe failed: Get "http://10.12.1.6:8000/health": dial tcp 10.12.1.6:8000: connect: connection refused
+2026-04-06T12:09:26Z   Warning   Unhealthy                  <none>   Readiness probe failed: Get "http://10.12.1.6:8000/health": dial tcp 10.12.1.6:8000: connect: connection refused
+2026-04-06T12:09:31Z   Warning   Unhealthy                  <none>   Readiness probe failed: Get "http://10.12.1.6:8000/health": dial tcp 10.12.1.6:8000: connect: connection refused
+2026-04-06T12:09:36Z   Warning   Unhealthy                  <none>   Readiness probe failed: Get "http://10.12.1.6:8000/health": dial tcp 10.12.1.6:8000: connect: connection refused
+2026-04-06T12:09:41Z   Warning   Unhealthy                  <none>   Readiness probe failed: Get "http://10.12.1.6:8000/health": dial tcp 10.12.1.6:8000: connect: connection refused
+2026-04-06T12:09:43Z   Warning   Unhealthy                  <none>   Readiness probe failed: Get "http://10.12.1.6:8000/health": dial tcp 10.12.1.6:8000: connect: connection refused
+2026-04-06T12:09:48Z   Warning   Unhealthy                  <none>   Readiness probe failed: Get "http://10.12.1.6:8000/health": dial tcp 10.12.1.6:8000: connect: connection refused
+2026-04-06T12:09:53Z   Warning   Unhealthy                  <none>   Readiness probe failed: Get "http://10.12.1.6:8000/health": dial tcp 10.12.1.6:8000: connect: connection refused
+2026-04-06T12:09:58Z   Warning   Unhealthy                  <none>   Readiness probe failed: Get "http://10.12.1.6:8000/health": dial tcp 10.12.1.6:8000: connect: connection refused
+2026-04-06T12:10:03Z   Warning   Unhealthy                  <none>   Readiness probe failed: Get "http://10.12.1.6:8000/health": dial tcp 10.12.1.6:8000: connect: connection refused
+2026-04-06T12:10:08Z   Warning   Unhealthy                  <none>   Readiness probe failed: Get "http://10.12.1.6:8000/health": dial tcp 10.12.1.6:8000: connect: connection refused
+2026-04-06T12:10:13Z   Warning   Unhealthy                  <none>   Readiness probe failed: Get "http://10.12.1.6:8000/health": dial tcp 10.12.1.6:8000: connect: connection refused
+2026-04-06T12:10:18Z   Warning   Unhealthy                  <none>   Readiness probe failed: Get "http://10.12.1.6:8000/health": dial tcp 10.12.1.6:8000: connect: connection refused
+2026-04-06T11:10:49Z   Normal    SuccessfulDelete           <none>   Deleted pod: worker-7dd86685-plwcb
+2026-04-06T11:10:49Z   Normal    Killing                    <none>   Stopping container vllm
+2026-04-06T11:10:49Z   Normal    Killing                    <none>   Stopping container worker
+2026-04-06T11:10:45Z   Normal    SuccessfulDelete           <none>   Deleted pod: worker-7dd86685-tvrz7
+2026-04-06T11:10:52Z   Warning   Unhealthy                  <none>   Readiness probe failed: Get "http://10.12.1.6:8000/health": dial tcp 10.12.1.6:8000: connect: connection refused
+2026-04-06T11:10:49Z   Normal    SuccessfulDelete           <none>   Deleted pod: vllm-5596dcdf9-bwd4z
+2026-04-06T11:10:45Z   Normal    Killing                    <none>   Stopping container worker
+2026-04-06T11:12:32Z   Normal    SuccessfulDelete           <none>   Deleted pod: dcgm-exporter-7jdrb
+2026-04-06T11:12:30Z   Normal    Killing                    <none>   Stopping container dcgm-exporter
+2026-04-06T11:12:32Z   Normal    SucceededDaemonPod         <none>   Found succeeded daemon pod llm-gateway/dcgm-exporter-7jdrb on node gke-llm-gateway-gpu-pool-016163f0-9jnf, will try to delete it
+2026-04-06T11:17:07Z   Normal    Started                    <none>   Container started
+2026-04-06T11:17:07Z   Normal    Created                    <none>   Container created
+2026-04-06T11:17:07Z   Normal    Pulled                     <none>   Successfully pulled image "nvcr.io/nvidia/k8s/dcgm-exporter:3.3.5-3.4.1-ubuntu22.04" in 39.149s (40.598s including waiting). Image size: 819106510 bytes.
+2026-04-06T11:16:26Z   Normal    Pulling                    <none>   Pulling image "nvcr.io/nvidia/k8s/dcgm-exporter:3.3.5-3.4.1-ubuntu22.04"
+2026-04-06T11:16:25Z   Normal    SuccessfulCreate           <none>   Created pod: dcgm-exporter-s5mjv
+2026-04-06T11:16:25Z   Normal    Scheduled                  <none>   Successfully assigned llm-gateway/dcgm-exporter-s5mjv to gke-llm-gateway-gpu-pool-016163f0-9jnf
+2026-04-06T11:18:08Z   Normal    SuccessfulDelete           <none>   Deleted pod: dcgm-exporter-s5mjv
+2026-04-06T11:18:06Z   Normal    Killing                    <none>   Stopping container dcgm-exporter
+2026-04-06T11:18:08Z   Normal    SucceededDaemonPod         <none>   Found succeeded daemon pod llm-gateway/dcgm-exporter-s5mjv on node gke-llm-gateway-gpu-pool-016163f0-9jnf, will try to delete it
+2026-04-06T11:24:44Z   Warning   FailedScheduling           <none>   0/2 nodes are available: 1 Insufficient nvidia.com/gpu, 1 node(s) didn't match Pod's node affinity/selector. no new claims to deallocate, preemption: 0/2 nodes are available: 2 Preemption is not helpful for scheduling.
+2026-04-06T11:23:49Z   Normal    SuccessfulCreate           <none>   Created pod: vllm-5596dcdf9-hbpqr
+2026-04-06T11:23:49Z   Normal    SuccessfulCreate           <none>   Created pod: worker-7dd86685-kddpg
+2026-04-06T11:23:50Z   Normal    Created                    <none>   Container created
+2026-04-06T11:23:50Z   Normal    Pulled                     <none>   Container image "us-docker.pkg.dev/<project-id>/llm-gateway/worker:latest" already present on machine and can be accessed by the pod
+2026-04-06T11:24:41Z   Normal    SuccessfulCreate           <none>   Created pod: dcgm-exporter-p5bwz
+2026-04-06T11:24:41Z   Normal    Scheduled                  <none>   Successfully assigned llm-gateway/dcgm-exporter-p5bwz to gke-llm-gateway-gpu-pool-016163f0-8xps
+2026-04-06T11:24:39Z   Warning   FailedScheduling           <none>   0/2 nodes are available: 1 node(s) didn't match Pod's node affinity/selector, 1 node(s) had untolerated taint(s). no new claims to deallocate, preemption: 0/2 nodes are available: 2 Preemption is not helpful for scheduling.
+2026-04-06T11:23:50Z   Normal    Started                    <none>   Container started
+2026-04-06T11:23:49Z   Normal    Scheduled                  <none>   Successfully assigned llm-gateway/worker-7dd86685-kddpg to gke-llm-gateway-default-pool-6f613b15-p1kq
+2026-04-06T11:24:42Z   Normal    Pulling                    <none>   Pulling image "nvcr.io/nvidia/k8s/dcgm-exporter:3.3.5-3.4.1-ubuntu22.04"
+2026-04-06T11:23:49Z   Warning   FailedScheduling           <none>   0/1 nodes are available: 1 node(s) didn't match Pod's node affinity/selector. no new claims to deallocate, preemption: 0/1 nodes are available: 1 Preemption is not helpful for scheduling.
+2026-04-06T11:23:50Z   Normal    TriggeredScaleUp           <none>   Pod triggered scale-up: [{https://www.googleapis.com/compute/v1/projects/<project-id>/zones/us-east1-d/instanceGroups/gke-llm-gateway-gpu-pool-016163f0-grp 0->1 (max: 1)}]
+2026-04-06T11:25:19Z   Normal    Pulled                     <none>   Successfully pulled image "nvcr.io/nvidia/k8s/dcgm-exporter:3.3.5-3.4.1-ubuntu22.04" in 36.085s (37.425s including waiting). Image size: 819106510 bytes.
+2026-04-06T11:25:51Z   Normal    Pulling                    <none>   Pulling image "us-docker.pkg.dev/<project-id>/llm-gateway/vllm-openai:latest"
+2026-04-06T11:25:43Z   Normal    SuccessfulAttachVolume     <none>   AttachVolume.Attach succeeded for volume "pvc-fddf845f-0a5e-40fa-a285-533c75d8fe4a" 
+2026-04-06T11:25:32Z   Normal    Started                    <none>   Container started
+2026-04-06T11:25:21Z   Normal    Started                    <none>   Container started
+2026-04-06T11:25:20Z   Normal    Created                    <none>   Container created
+2026-04-06T11:25:31Z   Normal    Scheduled                  <none>   Successfully assigned llm-gateway/worker-7dd86685-zfkr6 to gke-llm-gateway-default-pool-6f613b15-p1kq
+2026-04-06T11:25:40Z   Normal    Scheduled                  <none>   Successfully assigned llm-gateway/vllm-5596dcdf9-hbpqr to gke-llm-gateway-gpu-pool-016163f0-8xps
+2026-04-06T11:25:32Z   Normal    Pulled                     <none>   Container image "us-docker.pkg.dev/<project-id>/llm-gateway/worker:latest" already present on machine and can be accessed by the pod
+2026-04-06T11:25:32Z   Normal    Created                    <none>   Container created
+2026-04-06T11:25:31Z   Normal    SuccessfulCreate           <none>   Created pod: worker-7dd86685-zfkr6
+2026-04-06T12:26:19Z   Normal    KEDAScaleTargetDeactivated   <none>   Deactivated apps/v1.Deployment llm-gateway/vllm from 1 to 0
+2026-04-06T12:26:19Z   Normal    ScalingReplicaSet            <none>   Scaled down replica set vllm-5596dcdf9 from 1 to 0
+2026-04-06T12:26:19Z   Normal    SuccessfulDelete             <none>   Deleted pod: vllm-5596dcdf9-mmrvp
+2026-04-06T12:26:19Z   Normal    Killing                      <none>   Stopping container vllm
+2026-04-06T12:26:19Z   Normal    KEDAScaleTargetDeactivated   <none>   Deactivated apps/v1.Deployment llm-gateway/worker from 2 to 0
+2026-04-06T12:26:19Z   Normal    ScalingReplicaSet            <none>   Scaled down replica set worker-7dd86685 from 2 to 0
+2026-04-06T12:26:19Z   Normal    SuccessfulDelete             <none>   Deleted pod: worker-7dd86685-8t86n
+2026-04-06T12:26:19Z   Normal    SuccessfulDelete             <none>   Deleted pod: worker-7dd86685-s9pnx
+2026-04-06T12:26:19Z   Normal    Killing                      <none>   Stopping container worker
+2026-04-06T12:26:19Z   Normal    Killing                      <none>   Stopping container worker
+2026-04-06T12:26:24Z   Normal    SuccessfulRescale            <none>   New size: 1; reason: external metric s0-redis-inference_queue(&LabelSelector{MatchLabels:map[string]string{scaledobject.keda.sh/name: worker-autoscaler,},MatchExpressions:[]LabelSelectorRequirement{},}) below target
+2026-04-06T12:26:24Z   Normal    ScalingReplicaSet            <none>   Scaled up replica set worker-7dd86685 from 0 to 1
+2026-04-06T12:26:24Z   Normal    SuccessfulCreate             <none>   Created pod: worker-7dd86685-877dt
+2026-04-06T12:26:24Z   Normal    Scheduled                    <none>   Successfully assigned llm-gateway/worker-7dd86685-877dt to gke-llm-gateway-default-pool-6f613b15-p1kq
+2026-04-06T12:26:25Z   Normal    Pulled                       <none>   Container image "us-docker.pkg.dev/<project-id>/llm-gateway/worker:latest" already present on machine and can be accessed by the pod
+2026-04-06T12:26:25Z   Normal    Created                      <none>   Container created
+2026-04-06T12:26:25Z   Normal    Started                      <none>   Container started
+2026-04-06T12:26:49Z   Normal    KEDAScaleTargetDeactivated   <none>   Deactivated apps/v1.Deployment llm-gateway/worker from 1 to 0
+2026-04-06T12:26:49Z   Normal    ScalingReplicaSet            <none>   Scaled down replica set worker-7dd86685 from 1 to 0
+2026-04-06T12:26:49Z   Normal    SuccessfulDelete             <none>   Deleted pod: worker-7dd86685-877dt
+2026-04-06T12:26:49Z   Normal    Killing                      <none>   Stopping container worker
+2026-04-06T11:25:58Z   Normal    Pulled                       <none>   Successfully pulled image "us-docker.pkg.dev/<project-id>/llm-gateway/vllm-openai:latest" in 6.527s (6.527s including waiting). Image size: 9577341348 bytes.
+2026-04-06T11:25:58Z   Normal    Started                      <none>   Container started
+2026-04-06T11:25:58Z   Normal    Created                      <none>   Container created
+2026-04-06T12:36:30Z   Normal    ScaleDown                    <none>   deleting pod for node scale down
+2026-04-06T12:36:30Z   Normal    Killing                      <none>   Stopping container dcgm-exporter
+2026-04-06T12:37:38Z   Normal    UpdatedLoadBalancer          <none>   Updated load balancer with new hosts
