@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-PROJECT="project-15693e31-5f7e-4fce-b55"
+PROJECT="${GCP_PROJECT:?set GCP_PROJECT to your GCP project id}"
 REGION="us-east1"
 CLUSTER="llm-gateway"
 

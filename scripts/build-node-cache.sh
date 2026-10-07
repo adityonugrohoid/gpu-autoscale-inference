@@ -4,7 +4,7 @@
 # After completion, set VLLM_DISK_IMAGE in scripts/deploy-gcp.sh and recreate the GPU node pool.
 set -euo pipefail
 
-PROJECT="project-15693e31-5f7e-4fce-b55"
+PROJECT="${GCP_PROJECT:?set GCP_PROJECT to your GCP project id}"
 REGION="us-east1"
 REGISTRY="us-docker.pkg.dev/${PROJECT}/llm-gateway"
 DISK_NAME="vllm-node-cache-$(date +%Y%m%d)"

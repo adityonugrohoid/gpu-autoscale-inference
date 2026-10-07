@@ -129,6 +129,9 @@ locust -f loadtest/locustfile.py --host http://localhost:8080
 ### Phase 2 - Cloud (GCP GKE)
 
 ```bash
+# The GCP scripts read the project id from the environment
+export GCP_PROJECT=<your-gcp-project-id>
+
 # Deploy: creates GKE cluster, GPU node pool (T4 spot), pushes images, applies manifests
 ./scripts/deploy-gcp.sh
 
@@ -492,6 +495,8 @@ The full lifecycle is driven by shell scripts under `scripts/`. Container images
 ### Cloud (GCP GKE)
 
 ```bash
+export GCP_PROJECT=<your-gcp-project-id>
+
 # Creates the GKE cluster, GPU node pool (n1-standard-4 + T4 spot, 0-1 nodes),
 # pushes images, and applies all manifests
 ./scripts/deploy-gcp.sh
