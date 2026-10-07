@@ -1,0 +1,6 @@
+extends: default
+
+rules:
+  # monitoring/prometheus.yaml embeds the Grafana dashboard as one-line JSON
+  line-length: disable
+  document-start: disable
