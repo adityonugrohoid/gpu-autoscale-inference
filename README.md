@@ -21,8 +21,8 @@
 - [Architecture](#architecture)
 - [Getting Started](#getting-started)
   - [Prerequisites](#prerequisites)
-  - [Phase 1 - Local](#phase-1---local)
-  - [Phase 2 - Cloud (GCP GKE)](#phase-2---cloud-gcp-gke)
+  - [Local GPU (k3d)](#local-gpu-k3d)
+  - [Cloud GPU (GCP GKE)](#cloud-gpu-gcp-gke)
   - [Configuration](#configuration)
 - [Usage](#usage)
 - [How It Works](#how-it-works)
@@ -100,10 +100,10 @@ graph TD
 
 - Python 3.12+
 - Docker with NVIDIA GPU support
-- k3d (Phase 1 local) or `gcloud` CLI (Phase 2 cloud)
+- k3d (local) or `gcloud` CLI (cloud)
 - kubectl, helm
 
-### Phase 1 - Local
+### Local GPU (k3d)
 
 ```bash
 # 1. Start vLLM on host (uses local GPU directly)
@@ -111,22 +111,16 @@ docker run --gpus all -p 8000:8000 --ipc=host \
   vllm/vllm-openai --model Qwen/Qwen2.5-1.5B-Instruct \
   --max-model-len 4096 --gpu-memory-utilization 0.8 --enforce-eager
 
-# 2. Create local k3d cluster
-k3d cluster create llm-gateway --port "8080:80@loadbalancer"
+# 2. Create the k3d cluster, build and import the images, install KEDA,
+#    apply the manifests, point the worker at the host vLLM, deploy monitoring
+./scripts/deploy-local.sh
 
-# 3. Install KEDA
-helm repo add kedacore https://kedacore.github.io/charts
-helm install keda kedacore/keda --namespace keda --create-namespace
-
-# 4. Deploy all manifests
-kubectl apply -f k8s/
-
-# 5. Run load test
+# 3. Run load test
 source .venv/bin/activate
 locust -f loadtest/locustfile.py --host http://localhost:8080
 ```
 
-### Phase 2 - Cloud (GCP GKE)
+### Cloud GPU (GCP GKE)
 
 ```bash
 # The GCP scripts read the project id from the environment
@@ -171,8 +165,9 @@ cp .env.example .env
 
 ```bash
 # Worker: vLLM server URL
-# Phase 1 (host Docker): http://host.docker.internal:8000
-# Phase 2 (K8s Service):  http://vllm:8000
+# k8s/worker-deployment.yaml sets http://vllm:8000 (the in-cluster Service).
+# Locally vLLM runs on the host, so scripts/deploy-local.sh overrides it with
+#   kubectl set env deployment/worker VLLM_URL=http://host.docker.internal:8000
 VLLM_URL=http://host.docker.internal:8000
 
 REDIS_HOST=redis
@@ -408,7 +403,7 @@ Note: the "PV only" column is computed from the 8 GB image-pull math plus observ
 | Container start (image already local) | ~7s | Pod scheduler + containerd unpack |
 | 3.5 GB model from PVC into VRAM | ~2.5 min | Network-attached PD bandwidth, not GPU-bound |
 
-Further reduction requires either GPU-aware node warming (a min-1 idle GPU node, which defeats scale-to-zero) or moving the model into a tmpfs / Local SSD on the secondary boot disk itself (adds complexity and rebuild burden). Out of scope for v0.1.
+Further reduction requires either GPU-aware node warming (a min-1 idle GPU node, which defeats scale-to-zero) or moving the model into a tmpfs / Local SSD on the secondary boot disk itself (adds complexity and rebuild burden). Out of scope here.
 
 ### Full-cycle benchmark (GCP GKE, NVIDIA T4 Spot, run-20260406-190041)
 
