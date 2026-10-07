@@ -187,13 +187,13 @@ data:
           }
         },
         {
-          "title": "[vLLM HTTP] Inference Request Rate — POST /v1/completions",
+          "title": "[vLLM HTTP] Inference Request Rate - POST /v1/completions",
           "type": "timeseries",
           "gridPos": { "h": 7, "w": 6, "x": 0, "y": 17 },
           "targets": [
             {
               "expr": "sum(rate(http_requests_total{job=\"vllm\",handler=\"/v1/completions\",status=\"2xx\"}[1m]))",
-              "legendFormat": "POST /v1/completions (2xx) — req/s",
+              "legendFormat": "POST /v1/completions (2xx) - req/s",
               "refId": "A"
             }
           ],
@@ -240,23 +240,23 @@ data:
           }
         },
         {
-          "title": "[HPA/KEDA] Autoscaler Trigger — Observed Metric vs Target",
+          "title": "[HPA/KEDA] Autoscaler Trigger - Observed Metric vs Target",
           "type": "timeseries",
           "gridPos": { "h": 7, "w": 6, "x": 6, "y": 3 },
           "targets": [
             {
               "expr": "kube_horizontalpodautoscaler_status_target_metric{horizontalpodautoscaler=\"keda-hpa-vllm-autoscaler\",metric_name=\"s0-redis-inference_queue\"}",
-              "legendFormat": "observed — vllm HPA (redis queue)",
+              "legendFormat": "observed - vllm HPA (redis queue)",
               "refId": "A"
             },
             {
               "expr": "kube_horizontalpodautoscaler_status_target_metric{horizontalpodautoscaler=\"keda-hpa-worker-autoscaler\",metric_name=\"s0-redis-inference_queue\"}",
-              "legendFormat": "observed — worker HPA (redis queue)",
+              "legendFormat": "observed - worker HPA (redis queue)",
               "refId": "B"
             },
             {
               "expr": "kube_horizontalpodautoscaler_spec_target_metric{horizontalpodautoscaler=\"keda-hpa-vllm-autoscaler\",metric_name=\"s0-redis-inference_queue\"}",
-              "legendFormat": "target — KEDA threshold",
+              "legendFormat": "target - KEDA threshold",
               "refId": "C"
             }
           ],
@@ -268,7 +268,7 @@ data:
             },
             "overrides": [
               {
-                "matcher": { "id": "byName", "options": "target — KEDA threshold" },
+                "matcher": { "id": "byName", "options": "target - KEDA threshold" },
                 "properties": [
                   { "id": "custom.lineStyle", "value": { "fill": "dash", "dash": [10, 10] } },
                   { "id": "custom.fillOpacity", "value": 0 },
@@ -304,7 +304,7 @@ data:
           }
         },
         {
-          "title": "[kube-state-metrics] Cluster Nodes — Total vs GPU (Cluster Autoscaler)",
+          "title": "[kube-state-metrics] Cluster Nodes - Total vs GPU (Cluster Autoscaler)",
           "type": "timeseries",
           "gridPos": { "h": 7, "w": 6, "x": 18, "y": 3 },
           "targets": [
@@ -335,7 +335,7 @@ data:
           "targets": [
             {
               "expr": "DCGM_FI_DEV_GPU_UTIL",
-              "legendFormat": "SM util — gpu {{gpu}} ({{modelName}})",
+              "legendFormat": "SM util - gpu {{gpu}} ({{modelName}})",
               "refId": "A"
             }
           ],
@@ -356,7 +356,7 @@ data:
           "targets": [
             {
               "expr": "DCGM_FI_DEV_POWER_USAGE",
-              "legendFormat": "power — gpu {{gpu}} ({{modelName}})",
+              "legendFormat": "power - gpu {{gpu}} ({{modelName}})",
               "refId": "A"
             }
           ],
@@ -375,7 +375,7 @@ data:
           "targets": [
             {
               "expr": "DCGM_FI_DEV_FB_USED",
-              "legendFormat": "FB used — gpu {{gpu}} ({{modelName}})",
+              "legendFormat": "FB used - gpu {{gpu}} ({{modelName}})",
               "refId": "A"
             }
           ],
@@ -394,7 +394,7 @@ data:
           "targets": [
             {
               "expr": "DCGM_FI_DEV_GPU_TEMP",
-              "legendFormat": "temp — gpu {{gpu}} ({{modelName}})",
+              "legendFormat": "temp - gpu {{gpu}} ({{modelName}})",
               "refId": "A"
             }
           ],
@@ -407,13 +407,13 @@ data:
           }
         },
         {
-          "title": "[vLLM] Prompt Tokens/sec — Ingress Throughput",
+          "title": "[vLLM] Prompt Tokens/sec - Ingress Throughput",
           "type": "timeseries",
           "gridPos": { "h": 7, "w": 6, "x": 6, "y": 17 },
           "targets": [
             {
               "expr": "sum(rate(vllm:prompt_tokens_total[1m])) by (model_name)",
-              "legendFormat": "prompt tok/s — {{model_name}}",
+              "legendFormat": "prompt tok/s - {{model_name}}",
               "refId": "A"
             }
           ],
@@ -426,13 +426,13 @@ data:
           }
         },
         {
-          "title": "[vLLM] Generation Tokens/sec — Egress Throughput",
+          "title": "[vLLM] Generation Tokens/sec - Egress Throughput",
           "type": "timeseries",
           "gridPos": { "h": 7, "w": 6, "x": 12, "y": 17 },
           "targets": [
             {
               "expr": "sum(rate(vllm:generation_tokens_total[1m])) by (model_name)",
-              "legendFormat": "generation tok/s — {{model_name}}",
+              "legendFormat": "generation tok/s - {{model_name}}",
               "refId": "A"
             }
           ],
@@ -445,7 +445,7 @@ data:
           }
         },
         {
-          "title": "[vLLM] Time-to-First-Token (p95) — Cold Start Signal",
+          "title": "[vLLM] Time-to-First-Token (p95) - Cold Start Signal",
           "type": "timeseries",
           "gridPos": { "h": 7, "w": 6, "x": 18, "y": 17 },
           "targets": [

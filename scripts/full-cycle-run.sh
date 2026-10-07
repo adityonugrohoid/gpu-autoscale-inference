@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# full-cycle-run.sh — Comprehensive full-cycle demo with raw event logging
+# full-cycle-run.sh - Comprehensive full-cycle demo with raw event logging
 # Captures: K8s events, KEDA scaling, Redis queue, pod lifecycle, node provisioning
 # Output: persistent timestamped log in data/
 set -euo pipefail
@@ -9,14 +9,14 @@ set -euo pipefail
 ###############################################################################
 NAMESPACE="llm-gateway"
 GATEWAY_IP="${1:-}"
-# Both phases fire the IDENTICAL load profile — only the starting state differs
+# Both phases fire the IDENTICAL load profile - only the starting state differs
 # (Phase 1 fires into a cold system, Phase 2 into a warm one). Every panel
 # difference is then provably attributable to cold-vs-warm, with zero confounders.
 PHASE1_RATE=5              # Phase 1 = continuous load at this req/s
 PHASE1_DURATION=180        # seconds of sustained firing (~900 requests @ 5 rps)
 PHASE2_RATE=5              # Phase 2 = same rate
 PHASE2_DURATION=180        # same duration. 180s = 12 Prometheus scrape ticks
-                           # + 6 KEDA polls — every panel sees the full pattern.
+                           # + 6 KEDA polls - every panel sees the full pattern.
 PHASE2_DRAIN_TIMEOUT=300   # safety cap for post-fire drain wait
 POLL_INTERVAL=15
 COLD_START_TIMEOUT=900     # 15 min max wait for cold start
@@ -95,7 +95,7 @@ timeline() {
 }
 
 get_gpu_nodes() {
-  # Label-existence selector — GPU-type agnostic. Previously hardcoded
+  # Label-existence selector - GPU-type agnostic. Previously hardcoded
   # `nvidia-l4` which always returned 0 on `nvidia-tesla-t4` nodes and broke
   # the cool-down loop with a premature "GPU NODE REMOVED" event.
   "$K" get nodes -l cloud.google.com/gke-accelerator \
@@ -175,7 +175,7 @@ PIDS+=($!)
   >> "$NODE_LOG" 2>&1 &
 PIDS+=($!)
 
-# GPU resource registration timing — captures the exact moment nvidia.com/gpu
+# GPU resource registration timing - captures the exact moment nvidia.com/gpu
 # becomes schedulable. Combined with NODE_LOG's Ready=True timestamp, this
 # directly measures the device-plugin registration gap (research finding ~59s).
 # 2-second poll = sub-3s resolution; cheap (single API call per tick).
@@ -197,7 +197,7 @@ PIDS+=($!)
 #
 # Why this fixes the empty-log bug: the previous implementation only ran
 # `kubectl logs --tail=200` inside cleanup(), AFTER KEDA had scaled pods
-# to zero — pod selectors returned nothing, output was zero bytes.
+# to zero - pod selectors returned nothing, output was zero bytes.
 #
 # CRITICAL: --pod-running-timeout=15m. kubectl logs -f defaults to 20s, so
 # spawning against a Pending pod (waiting for GPU node provision) returns
@@ -287,7 +287,7 @@ trap cleanup EXIT
 # Pre-flight
 ###############################################################################
 log "============================================================"
-log "FULL-CYCLE RUN — ${TIMESTAMP}"
+log "FULL-CYCLE RUN - ${TIMESTAMP}"
 log "============================================================"
 log "Gateway:    ${GATEWAY}"
 log "Namespace:  ${NAMESPACE}"
@@ -317,21 +317,21 @@ if ! echo "$HEALTH" | grep -q '"ok"'; then
   exit 1
 fi
 
-timeline "PRE-FLIGHT COMPLETE — system at zero (no GPU node, no workers, no vLLM)"
+timeline "PRE-FLIGHT COMPLETE - system at zero (no GPU node, no workers, no vLLM)"
 
 ###############################################################################
-# PHASE 1 — Cold Start Continuous Load
+# PHASE 1 - Cold Start Continuous Load
 ###############################################################################
-# Fires the SAME continuous-load profile as Phase 2 (rate × duration), but
+# Fires the SAME continuous-load profile as Phase 2 (rate x duration), but
 # into a cold system (0 pods, 0 GPU node). This makes the two phases directly
 # comparable: identical ingress signal, only the starting system state differs.
 # Every panel difference between Phase 1 and Phase 2 is then attributable
 # purely to cold-vs-warm.
 log ""
 log "============================================================"
-log "PHASE 1: COLD START CONTINUOUS LOAD — ${PHASE1_RATE} req/s × ${PHASE1_DURATION}s"
+log "PHASE 1: COLD START CONTINUOUS LOAD - ${PHASE1_RATE} req/s x ${PHASE1_DURATION}s"
 log "============================================================"
-timeline "PHASE 1 START — continuous load: ${PHASE1_RATE} req/s × ${PHASE1_DURATION}s (cold start)"
+timeline "PHASE 1 START - continuous load: ${PHASE1_RATE} req/s x ${PHASE1_DURATION}s (cold start)"
 
 P1_START_EPOCH=$(date +%s)
 P1_FIRE_END=$((P1_START_EPOCH + PHASE1_DURATION))
@@ -345,14 +345,14 @@ FIRST_TOKEN_LOGGED=false
 
 # CRITICAL: fire loop must make ZERO blocking kubectl/curl-result calls.
 # Previous version interleaved status snapshots with fires; the snapshots
-# (kubectl exec redis-cli + 5× curl /result) took >POLL_INTERVAL, causing
+# (kubectl exec redis-cli + 5x curl /result) took >POLL_INTERVAL, causing
 # every iteration to re-trigger the snapshot and collapsing fire rate to
 # ~0.06 req/s. Fix: fire loop does only `curl /generate`, and a parallel
 # background subshell does the status monitoring independently.
 P1_FIRED_FILE=$(mktemp)
 echo 0 > "$P1_FIRED_FILE"
 
-# Background status monitor — runs independently of fire loop, writes to
+# Background status monitor - runs independently of fire loop, writes to
 # the standard logs so the user sees live progress.
 (
   while [ "$(date +%s)" -lt "$P1_FIRE_END" ]; do
@@ -372,7 +372,7 @@ echo 0 > "$P1_FIRED_FILE"
 ) &
 P1_MONITOR_PID=$!
 
-# Fire loop — ZERO kubectl calls. First SAMPLE_COUNT requests fire
+# Fire loop - ZERO kubectl calls. First SAMPLE_COUNT requests fire
 # synchronously so we can capture their job_ids for milestone tracking;
 # subsequent requests fire in the background so sleep interval dominates.
 while [ "$(date +%s)" -lt "$P1_FIRE_END" ]; do
@@ -396,20 +396,20 @@ while [ "$(date +%s)" -lt "$P1_FIRE_END" ]; do
 done
 
 # Stop monitor; give backgrounded curls a moment to drain (do NOT use bare
-# `wait` — it would block on the long-running kubectl --watch-only jobs).
+# `wait` - it would block on the long-running kubectl --watch-only jobs).
 kill "$P1_MONITOR_PID" 2>/dev/null || true
 sleep 2
 rm -f "$P1_FIRED_FILE"
-log "PHASE 1 FIRE COMPLETE — ${P1_FIRED} requests fired in ${PHASE1_DURATION}s, waiting for GPU ready + queue drain"
-timeline "PHASE 1 FIRE STOP — ${P1_FIRED} requests fired, awaiting cold-start completion"
+log "PHASE 1 FIRE COMPLETE - ${P1_FIRED} requests fired in ${PHASE1_DURATION}s, waiting for GPU ready + queue drain"
+timeline "PHASE 1 FIRE STOP - ${P1_FIRED} requests fired, awaiting cold-start completion"
 
 # Post-fire: wait for queue to drain AND samples complete. GPU may still be
-# provisioning at this point — that's expected for cold start.
+# provisioning at this point - that's expected for cold start.
 while true; do
   sleep "$POLL_INTERVAL"
   ELAPSED=$(($(date +%s) - T0))
   if [ "$ELAPSED" -ge "$COLD_START_TIMEOUT" ]; then
-    log "COLD START TIMEOUT at ${COLD_START_TIMEOUT}s — breaking"
+    log "COLD START TIMEOUT at ${COLD_START_TIMEOUT}s - breaking"
     timeline "PHASE 1 TIMEOUT at ${COLD_START_TIMEOUT}s"
     break
   fi
@@ -429,13 +429,13 @@ while true; do
   if [ "$GPU_NODES" -ge 1 ] && [ -z "$VLLM_READY_TIME" ] && echo "$VLLM_STATUS" | grep -q "1/1"; then
     VLLM_READY_TIME=$(date +%s)
     COLD_START_SECONDS=$((VLLM_READY_TIME - T0))
-    timeline "vLLM READY — cold start = ${COLD_START_SECONDS}s"
+    timeline "vLLM READY - cold start = ${COLD_START_SECONDS}s"
   fi
 
   # Milestone: first completions
   if [ "$SAMPLE_DONE" = "$SAMPLE_COUNT" ] && [ "$FIRST_TOKEN_LOGGED" = "false" ]; then
     FIRST_TOKEN_LOGGED=true
-    timeline "PHASE 1 ALL SAMPLES COMPLETE — first completions at T+${ELAPSED}s"
+    timeline "PHASE 1 ALL SAMPLES COMPLETE - first completions at T+${ELAPSED}s"
   fi
 
   # Done: queue empty AND all samples complete
@@ -445,7 +445,7 @@ while true; do
 done
 
 PHASE1_END=$(($(date +%s) - T0))
-timeline "PHASE 1 DONE — ${PHASE1_END}s total, ${P1_FIRED} requests fired"
+timeline "PHASE 1 DONE - ${PHASE1_END}s total, ${P1_FIRED} requests fired"
 
 # Capture K8s events snapshot
 log ""
@@ -466,23 +466,23 @@ echo "" | tee -a "$MAIN_LOG"
 ###############################################################################
 log ""
 log "============================================================"
-log "VALLEY GAP — sleeping ${VALLEY_GAP}s to create visible gap in metrics"
+log "VALLEY GAP - sleeping ${VALLEY_GAP}s to create visible gap in metrics"
 log "============================================================"
-timeline "VALLEY GAP START — ${VALLEY_GAP}s pause"
+timeline "VALLEY GAP START - ${VALLEY_GAP}s pause"
 sleep "$VALLEY_GAP"
 timeline "VALLEY GAP END"
 
 ###############################################################################
-# PHASE 2 — Warm Continuous Load
+# PHASE 2 - Warm Continuous Load
 ###############################################################################
 # Instead of a one-shot burst (which drains in ~23s, faster than the 15s
 # Prometheus scrape interval and 30s KEDA polling), Phase 2 fires at a sustained
 # rate for PHASE2_DURATION seconds. This creates a FLAT-TOP pattern on all
-# throughput/utilization panels — visually distinct from Phase 1's cold-start
+# throughput/utilization panels - visually distinct from Phase 1's cold-start
 # ramp-and-plateau shape, and directly shows continuous warm-GPU serving.
 log ""
 log "============================================================"
-log "PHASE 2: WARM CONTINUOUS LOAD — ${PHASE2_RATE} req/s × ${PHASE2_DURATION}s"
+log "PHASE 2: WARM CONTINUOUS LOAD - ${PHASE2_RATE} req/s x ${PHASE2_DURATION}s"
 log "============================================================"
 
 # Capture state at fire time
@@ -490,7 +490,7 @@ GPU_NODES=$(get_gpu_nodes)
 WORKER_COUNT=$(get_pod_count "worker")
 VLLM_PODS=$(get_pod_count "vllm")
 log "State at fire: gpu_nodes=${GPU_NODES} workers=${WORKER_COUNT} vllm=${VLLM_PODS}"
-timeline "PHASE 2 START — continuous load: ${PHASE2_RATE} req/s × ${PHASE2_DURATION}s (warm GPU)"
+timeline "PHASE 2 START - continuous load: ${PHASE2_RATE} req/s x ${PHASE2_DURATION}s (warm GPU)"
 
 P2_START=$(($(date +%s) - T0))
 P2_START_EPOCH=$(date +%s)
@@ -519,7 +519,7 @@ echo 0 > "$P2_FIRED_FILE"
 ) &
 P2_MONITOR_PID=$!
 
-# Fire loop — ZERO kubectl calls, backgrounded curls
+# Fire loop - ZERO kubectl calls, backgrounded curls
 while [ "$(date +%s)" -lt "$P2_FIRE_END" ]; do
   (curl -s -X POST "${GATEWAY}/generate" \
     -H 'Content-Type: application/json' \
@@ -533,10 +533,10 @@ done
 kill "$P2_MONITOR_PID" 2>/dev/null || true
 sleep 2
 rm -f "$P2_FIRED_FILE"
-log "PHASE 2 FIRE COMPLETE — ${P2_FIRED} requests fired in ${PHASE2_DURATION}s, entering drain"
-timeline "PHASE 2 FIRE STOP — ${P2_FIRED} requests fired, queue draining"
+log "PHASE 2 FIRE COMPLETE - ${P2_FIRED} requests fired in ${PHASE2_DURATION}s, entering drain"
+timeline "PHASE 2 FIRE STOP - ${P2_FIRED} requests fired, queue draining"
 
-# Post-fire drain — wait for queue to clear
+# Post-fire drain - wait for queue to clear
 DRAIN_START=$(date +%s)
 while true; do
   sleep "$POLL_INTERVAL"
@@ -554,21 +554,21 @@ while true; do
     break
   fi
   if [ "$D_ELAPSED" -ge "$PHASE2_DRAIN_TIMEOUT" ]; then
-    log "PHASE 2 DRAIN TIMEOUT at ${PHASE2_DRAIN_TIMEOUT}s — breaking"
+    log "PHASE 2 DRAIN TIMEOUT at ${PHASE2_DRAIN_TIMEOUT}s - breaking"
     break
   fi
 done
 
 P2_END=$(($(date +%s) - T0))
 P2_DURATION=$((P2_END - P2_START))
-timeline "PHASE 2 DONE — ${P2_DURATION}s total (warm response time)"
+timeline "PHASE 2 DONE - ${P2_DURATION}s total (warm response time)"
 
 ###############################################################################
-# COOL DOWN — Wait for scale-to-zero
+# COOL DOWN - Wait for scale-to-zero
 ###############################################################################
 log ""
 log "============================================================"
-log "COOL DOWN — waiting for pods + GPU node to scale to zero"
+log "COOL DOWN - waiting for pods + GPU node to scale to zero"
 log "============================================================"
 timeline "COOL DOWN START"
 
@@ -599,13 +599,13 @@ while true; do
   # Detect pod scale-to-zero
   if [ "$VLLM_PODS" -eq 0 ] && [ "$WORKER_PODS" -eq 0 ] && [ -z "$PODS_ZERO_TIME" ]; then
     PODS_ZERO_TIME=$(($(date +%s) - T0))
-    timeline "PODS SCALED TO ZERO — KEDA cooldown complete at T+${PODS_ZERO_TIME}s"
+    timeline "PODS SCALED TO ZERO - KEDA cooldown complete at T+${PODS_ZERO_TIME}s"
   fi
 
   # Detect GPU node removal
   if [ "$GPU_NODES" -eq 0 ] && [ -z "$GPU_ZERO_TIME" ]; then
     GPU_ZERO_TIME=$(($(date +%s) - T0))
-    timeline "GPU NODE REMOVED — Cluster Autoscaler scale-down at T+${GPU_ZERO_TIME}s"
+    timeline "GPU NODE REMOVED - Cluster Autoscaler scale-down at T+${GPU_ZERO_TIME}s"
   fi
 
   # Done: everything at zero
@@ -614,7 +614,7 @@ while true; do
   fi
 done
 
-timeline "COOL DOWN COMPLETE — full zero state"
+timeline "COOL DOWN COMPLETE - full zero state"
 
 ###############################################################################
 # Final captures
@@ -644,7 +644,7 @@ echo "" | tee -a "$MAIN_LOG"
 ###############################################################################
 {
   echo "============================================================"
-  echo "FULL-CYCLE RUN SUMMARY — ${TIMESTAMP}"
+  echo "FULL-CYCLE RUN SUMMARY - ${TIMESTAMP}"
   echo "============================================================"
   echo ""
   echo "Cluster:     GKE llm-gateway (us-east1-d)"
@@ -652,7 +652,7 @@ echo "" | tee -a "$MAIN_LOG"
   echo "Model:       Qwen/Qwen2.5-1.5B-Instruct"
   echo "Gateway:     ${GATEWAY}"
   echo ""
-  echo "Load profile:       ${PHASE1_RATE} req/s × ${PHASE1_DURATION}s (both phases identical)"
+  echo "Load profile:       ${PHASE1_RATE} req/s x ${PHASE1_DURATION}s (both phases identical)"
   echo ""
   echo "--- PHASE 1: COLD START CONTINUOUS LOAD ---"
   echo "Requests fired:     ${P1_FIRED}"
@@ -681,5 +681,5 @@ echo "" | tee -a "$MAIN_LOG"
 
 log ""
 log "============================================================"
-log "RUN COMPLETE — all output in ${RUN_DIR}"
+log "RUN COMPLETE - all output in ${RUN_DIR}"
 log "============================================================"

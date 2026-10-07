@@ -197,7 +197,7 @@ echo ""
 if [ -n "${GATEWAY_IP:-}" ]; then
   echo "Gateway:    http://${GATEWAY_IP}"
 else
-  echo "Gateway:    (LoadBalancer IP not yet assigned — check: kubectl get svc gateway -n $NAMESPACE)"
+  echo "Gateway:    (LoadBalancer IP not yet assigned - check: kubectl get svc gateway -n $NAMESPACE)"
 fi
 echo "Grafana:    kubectl port-forward svc/grafana 3000:3000 -n $NAMESPACE"
 echo "Prometheus: kubectl port-forward svc/prometheus 9090:9090 -n $NAMESPACE"
