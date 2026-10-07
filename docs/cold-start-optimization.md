@@ -1,7 +1,7 @@
 # Cold Start Optimization — Research, Plan & Results
 
 **Status:** Implemented and benchmarked on GCP GKE T4 Spot (us-east1-d), 2026-04-05.
-**Result:** Cold start reduced from **659 s (11 min)** → **338 s (5.6 min)** — **48% improvement**.
+**Result:** Cold start reduced from **about 11 min** to **about 5.6 min**, read from the Prometheus timeline. The closest recorded run, run-20260405-015400, shows first completions at T+305 s and all samples complete at T+323 s; the baseline has no run directory.
 
 ## Problem
 
@@ -145,10 +145,10 @@ Hardware: GCP GKE, NVIDIA T4 Spot, n1-standard-4, us-east1-d. Measured 2026-04-0
 | Phase | Baseline (11 GB baked) | After Opt 1 (PV only) | After Opt 1 + Opt 2 (PV + SBD) |
 |---|---|---|---|
 | GPU node provision | ~2.5 min | ~2.5 min | ~2.5 min |
-| Container image pull | **~6.5 min** (11 GB) | **~5 min** (8 GB) | **~30 s** (local disk) |
+| Container image pull | **~6.5 min** (11 GB) | **~5 min** (8 GB) | **~7 s** (local disk) |
 | vLLM boot + model load to VRAM | ~2 min (baked) | ~2.5 min (PVC → VRAM) | ~2.5 min (PVC → VRAM) |
-| **Total** | **~11 min (659s)** ✅ measured | **~10 min** ⚠ estimated | **~5.6 min (338s)** ✅ measured |
-| **Savings vs baseline** | — | **~1.5 min (~14%)** | **~5.4 min (~48%)** |
+| **Total** | **~11 min** (Prometheus) | **~10 min** ⚠ estimated | **~5.6 min** (Prometheus, run-20260405-015400) |
+| **Savings vs baseline** | — | **~1.5 min (~14%)** | **~5.4 min (about half)** |
 
 > ⚠ The "PV only" column is computed from the 8 GB image-pull math + observed PVC load
 > time. It was never run in isolation as a separate benchmark — the two optimizations
@@ -160,7 +160,7 @@ Hardware: GCP GKE, NVIDIA T4 Spot, n1-standard-4, us-east1-d. Measured 2026-04-0
 | Phase | Duration | Why it stays |
 |---|---|---|
 | GCE boot + NVIDIA driver init | ~2.5 min | Outside GKE's control — hardware bring-up |
-| Container start (image already local) | ~30 s | Pod scheduler + containerd unpack |
+| Container start (image already local) | ~7 s | Pod scheduler + containerd unpack |
 | 3.5 GB model from PVC → VRAM | ~2.5 min | Network-attached PD bandwidth, not GPU-bound |
 
 Further reduction requires either GPU-aware node warming (a min-1 idle GPU node — defeats
@@ -206,4 +206,4 @@ decompression, not GPU class.
 
 - [x] PV for model weights — `k8s/vllm-pvc.yaml`, `k8s/vllm-model-init-job.yaml`, vLLM deployment mounts PVC
 - [x] GKE Secondary Boot Disk — `vllm-node-cache-20260405` (50 GB, us-east1-d), built via `scripts/build-node-cache.sh`
-- [x] Cold start verified at 5.6 min end-to-end (run-20260405-015400, run-20260406-190041)
+- [x] Cold start about 5.6 min end-to-end on the Prometheus timeline (closest recorded run: run-20260405-015400)

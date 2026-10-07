@@ -55,7 +55,7 @@ An LLM inference platform with fully elastic GPU provisioning. Requests are queu
 | Pod Autoscaler | KEDA ScaledObject | Event-driven 0 to N scaling on queue depth |
 | Node Autoscaler | GKE Cluster Autoscaler | GPU VM provisioning on pending pod |
 | Inference Engine | vLLM (OpenAI-compatible) | Continuous batching, KV cache, Prometheus metrics |
-| Model | Qwen/Qwen2.5-1.5B-Instruct | 3.5 GB VRAM, ~100 tok/s on T4 |
+| Model | Qwen/Qwen2.5-1.5B-Instruct | 3.5 GB VRAM, ~50 tok/s aggregate generation on T4 |
 | GPU Telemetry | NVIDIA DCGM exporter | GPU utilization, power, memory via Prometheus |
 | Cluster Metrics | kube-state-metrics | Pod replica counts, node capacity, deployment state |
 | Dashboarding | Grafana (12 panels) | Queue depth, GPU util, TTFT, tokens/sec, node count |
@@ -91,8 +91,8 @@ graph TD
 |---|---|---|---|---|
 | Pod | KEDA ScaledObject driving HPA | `redis_key_size{key="inference_queue"}` > 5 | Worker Deployment 0 to 2, vLLM Deployment 0 to 1 | ~30s (KEDA polling) |
 | Node | GKE Cluster Autoscaler | Pending pod with `nvidia.com/gpu: 1` resource request | GPU VM (n1-standard-4, T4) 0 to 1 | ~2 min (GCE instance boot) |
-| Image | GKE Secondary Boot Disk | Node boot event | Container layer cache attached as local pd-ssd | ~0s (pre-attached) |
-| Model | PersistentVolumeClaim | vLLM pod start | Qwen2.5-1.5B weights at `/root/.cache/huggingface` | ~128s (VRAM load) |
+| Image | GKE Secondary Boot Disk | Node boot event | Container layer cache attached as local pd-ssd | ~7s (local image load) |
+| Model | PersistentVolumeClaim | vLLM pod start | Qwen2.5-1.5B weights at `/root/.cache/huggingface` | ~2.5 min (VRAM load) |
 
 ## Getting Started
 
@@ -205,7 +205,7 @@ Every prompt is enqueued immediately. `/generate` always returns a `job_id`. No 
 3. The vLLM pod enters Pending: it requests `nvidia.com/gpu: 1`.
 4. Cluster Autoscaler provisions an n1-standard-4 plus T4 node (spot, ~$0.11/hr).
 5. The GPU node boots with the container image pre-cached (Secondary Boot Disk).
-6. vLLM loads model weights from the PVC into VRAM (3.5 GB, ~128s).
+6. vLLM loads model weights from the PVC into VRAM (3.5 GB, ~2.5 min).
 7. The readiness probe (httpGet `/health`, `failureThreshold: 60`) passes.
 8. Workers pull jobs via `BRPOP` and POST to vLLM `/v1/completions`.
 9. Results are written to Redis (`result:{job_id}`, TTL 300s).
@@ -320,7 +320,7 @@ curl -X POST http://$GATEWAY_IP/generate \
 
 ## Methodology
 
-Cold start is the dominant cost in scale-to-zero GPU inference. The baseline took **11 min (659s)** end-to-end, almost all of it spent pulling an 11 GB container image over the network to a freshly provisioned GPU node. After two stacked optimizations, cold start dropped to **5.6 min (338s)**, a **48% reduction**. See [docs/cold-start-optimization.md](docs/cold-start-optimization.md) for the full write-up.
+Cold start is the dominant cost in scale-to-zero GPU inference. The baseline took **about 11 min** end-to-end, almost all of it spent pulling an 11 GB container image over the network to a freshly provisioned GPU node. After two stacked optimizations, cold start dropped to **about 5.6 min**, roughly half. Both totals were read from the Prometheus timeline at the time; neither is a committed log line. The closest recorded run, run-20260405-015400, shows first completions at T+305s and all samples complete at T+323s; no run directory exists for the baseline. See [docs/cold-start-optimization.md](docs/cold-start-optimization.md) for the full write-up.
 
 All numbers below are from the same hardware: GCP GKE, **NVIDIA T4 Spot, n1-standard-4, us-east1-d**, measured 2026-04-05.
 
@@ -333,7 +333,7 @@ The original custom vLLM image baked Qwen2.5-1.5B's 3.5 GB weights directly into
 | GPU node provision (GCE boot + NVIDIA driver) | ~2.5 min | GCE API + driver init |
 | Container image pull (11 GB) | **~6.5 min** | Network I/O, 28 MB/s ceiling on 4-vCPU containerd |
 | vLLM Python/CUDA boot + model load (from baked image) | ~2 min | CUDA init + 3.5 GB into VRAM |
-| **Total** | **~11 min (659s)** | |
+| **Total** | **~11 min** (Prometheus, no run directory) | |
 
 The 28 MB/s pull speed is **not** network-bandwidth-limited (the n1-standard-4 NIC has multi-Gbps egress headroom). It is bottlenecked by containerd's 3-concurrent-layer pull cap and CPU-side decompression on a 4-vCPU node. No GKE config knob exposes `max_concurrent_downloads`.
 
@@ -372,10 +372,10 @@ Disk image: `vllm-node-cache-20260405` (50 GB, us-east1-d). Rebuild only when th
 | Phase | Baseline (11 GB baked) | After Opt 1 (PV only) | After Opt 1 + Opt 2 (PV + SBD) |
 |---|---|---|---|
 | GPU node provision | ~2.5 min | ~2.5 min | ~2.5 min |
-| Container image pull | **~6.5 min** (11 GB) | **~5 min** (8 GB) | **~30s** (local disk) |
+| Container image pull | **~6.5 min** (11 GB) | **~5 min** (8 GB) | **~7s** (local disk) |
 | vLLM boot + model load to VRAM | ~2 min (baked) | ~2.5 min (PVC into VRAM) | ~2.5 min (PVC into VRAM) |
-| **Total** | **~11 min (659s)** (measured) | **~10 min** (estimated) | **~5.6 min (338s)** (measured) |
-| **Savings vs baseline** | reference | **~1.5 min (~14%)** | **~5.4 min (~48%)** |
+| **Total** | **~11 min** (Prometheus) | **~10 min** (estimated) | **~5.6 min** (Prometheus, run-20260405-015400) |
+| **Savings vs baseline** | reference | **~1.5 min (~14%)** | **~5.4 min (about half)** |
 
 Note: the "PV only" column is computed from the 8 GB image-pull math plus observed PVC load time. It was never run in isolation as a separate benchmark; the two optimizations were measured together.
 
@@ -384,7 +384,7 @@ Note: the "PV only" column is computed from the 8 GB image-pull math plus observ
 | Phase | Duration | Why it stays |
 |---|---|---|
 | GCE boot + NVIDIA driver init | ~2.5 min | Outside GKE's control, hardware bring-up |
-| Container start (image already local) | ~30s | Pod scheduler + containerd unpack |
+| Container start (image already local) | ~7s | Pod scheduler + containerd unpack |
 | 3.5 GB model from PVC into VRAM | ~2.5 min | Network-attached PD bandwidth, not GPU-bound |
 
 Further reduction requires either GPU-aware node warming (a min-1 idle GPU node, which defeats scale-to-zero) or moving the model into a tmpfs / Local SSD on the secondary boot disk itself (adds complexity and rebuild burden). Out of scope for v0.1.
@@ -415,7 +415,7 @@ Two phases (translucent blue regions) and three event lines tell the full story.
 **Phase 1 - Cold Start (19:00:56 to 19:15:25, T+15s to T+884s)**
 - 873 requests fired at 5 req/s for 180s, then the queue holds while the system cold-starts from zero
 - KEDA scales worker 0 to 1 to 2 and vLLM 0 to 1 within ~30s of the queue threshold breach
-- Cluster Autoscaler provisions the GPU node (~2.5 min); the image loads from Secondary Boot Disk (~7s); the model loads from PVC into VRAM (~2 min)
+- Cluster Autoscaler provisions the GPU node (~2.5 min); the image loads from Secondary Boot Disk (~7s); the model loads from PVC into VRAM (about 2.5 min)
 - First completions at T+576s; queue drains by T+595s
 - Real-world resilience event: a Spot preemption hit at T+332s mid-cold-start. KEDA plus Cluster Autoscaler self-healed in 105s without manual intervention or lost requests (see the self-heal screenshot below)
 

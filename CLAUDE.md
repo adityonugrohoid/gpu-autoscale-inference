@@ -254,7 +254,7 @@ gpu-autoscale-inference/
 - **No Ollama** — single vLLM runtime; consistent API surface, stronger portfolio signal
 - **Qwen2.5-1.5B** (`Qwen/Qwen2.5-1.5B-Instruct`) — small footprint (~3.5GB VRAM), cold start (~5-10s), ungated, Alibaba/Qwen — top-5 on open model leaderboards, well-known in ML engineering. Platform is model-agnostic via `MODEL_ID` env var. **vLLM startup flags for 8GB VRAM:** `--max-model-len 4096 --gpu-memory-utilization 0.8 --enforce-eager`
 - **2 workers : 1 vLLM** — workers share vLLM over HTTP; vLLM handles concurrency natively
-- **Locust load tuning** — Qwen2.5-1.5B is fast (~100+ tok/s), so use 100+ concurrent users with long prompts to keep queue populated long enough for scaling to be visible in demo
+- **Locust load tuning** — Qwen2.5-1.5B is fast (~50 tok/s aggregate generation on T4), so use 100+ concurrent users with long prompts to keep queue populated long enough for scaling to be visible in demo
 - **`job_queue.py` not `queue.py`** — avoids Python stdlib name collision
 
 ## Phase 3 — Cold Start Optimization (implemented)
