@@ -215,8 +215,8 @@ gpu-autoscale-inference/
 │   ├── azure/                       # NC4as_T4_v3 node pool, GPU tolerations
 │   └── gcp/                         # n1-standard-4 + T4 node pool, GPU tolerations
 ├── monitoring/
-│   ├── prometheus.yaml
-│   └── grafana-dashboard.json       # Phase 1: queue/pod metrics; Phase 2: + GPU metrics
+│   ├── prometheus.yaml              # Prometheus + Grafana; the 12-panel dashboard is the grafana-dashboards ConfigMap
+│   └── dcgm-exporter.yaml
 ├── loadtest/
 │   └── locustfile.py                # POST /generate + poll /result until done
 ├── scripts/
