@@ -7,6 +7,8 @@ CLUSTER="llm-gateway"
 NAMESPACE="llm-gateway"
 REGISTRY="us-docker.pkg.dev/${PROJECT}/llm-gateway"
 VLLM_DISK_IMAGE="vllm-node-cache-20260405"
+# vLLM release cached on the disk image; change both together
+VLLM_TAG="v0.19.0"
 
 # Auto-detect kubectl (prefer gcloud SDK to avoid broken Docker Desktop symlinks)
 SDK_ROOT=$(gcloud info --format="value(installation.sdk_root)" 2>/dev/null || true)
@@ -46,9 +48,9 @@ if docker info &>/dev/null; then
   docker push "${REGISTRY}/worker:latest"
 
   echo "Pushing vLLM base image to Artifact Registry..."
-  docker pull vllm/vllm-openai:latest
-  docker tag vllm/vllm-openai:latest "${REGISTRY}/vllm-openai:latest"
-  docker push "${REGISTRY}/vllm-openai:latest"
+  docker pull vllm/vllm-openai:${VLLM_TAG}
+  docker tag vllm/vllm-openai:${VLLM_TAG} "${REGISTRY}/vllm-openai:${VLLM_TAG}"
+  docker push "${REGISTRY}/vllm-openai:${VLLM_TAG}"
 else
   echo "Docker not available, using Cloud Build..."
   gcloud services enable cloudbuild.googleapis.com --project "$PROJECT"
@@ -67,18 +69,19 @@ else
   cat > /tmp/vllm-cloudbuild.yaml << 'CBEOF'
 steps:
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['pull', 'vllm/vllm-openai:latest']
+    args: ['pull', 'vllm/vllm-openai:${_VLLM_TAG}']
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['tag', 'vllm/vllm-openai:latest', '${_REGISTRY}/vllm-openai:latest']
+    args: ['tag', 'vllm/vllm-openai:${_VLLM_TAG}', '${_REGISTRY}/vllm-openai:${_VLLM_TAG}']
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['push', '${_REGISTRY}/vllm-openai:latest']
+    args: ['push', '${_REGISTRY}/vllm-openai:${_VLLM_TAG}']
 timeout: '1800s'
 substitutions:
   _REGISTRY: ''
+  _VLLM_TAG: ''
 CBEOF
   gcloud builds submit --no-source \
     --config=/tmp/vllm-cloudbuild.yaml \
-    --substitutions="_REGISTRY=${REGISTRY}" \
+    --substitutions="_REGISTRY=${REGISTRY},_VLLM_TAG=${VLLM_TAG}" \
     --project "$PROJECT" --quiet
 fi
 
@@ -130,7 +133,7 @@ if ! kubectl get namespace keda &>/dev/null; then
   echo "Installing KEDA..."
   helm repo add kedacore https://kedacore.github.io/charts 2>/dev/null || true
   helm repo update
-  helm install keda kedacore/keda --namespace keda --create-namespace --wait
+  helm install keda kedacore/keda --version 2.19.0 --namespace keda --create-namespace --wait
 else
   echo "KEDA already installed, skipping."
 fi
@@ -139,7 +142,7 @@ fi
 if ! kubectl get deployment kube-state-metrics -n kube-system &>/dev/null; then
   echo "Installing kube-state-metrics..."
   helm repo add prometheus-community https://prometheus-community.github.io/helm-charts 2>/dev/null || true
-  helm install kube-state-metrics prometheus-community/kube-state-metrics --namespace kube-system --wait
+  helm install kube-state-metrics prometheus-community/kube-state-metrics --version 7.2.2 --namespace kube-system --wait
 else
   echo "kube-state-metrics already installed, skipping."
 fi
@@ -161,7 +164,7 @@ kubectl wait --for=condition=complete job/vllm-model-init \
 echo "Setting container images to Artifact Registry..."
 kubectl set image deployment/gateway gateway="${REGISTRY}/gateway:latest" -n "$NAMESPACE"
 kubectl set image deployment/worker worker="${REGISTRY}/worker:latest" -n "$NAMESPACE"
-kubectl set image deployment/vllm vllm="${REGISTRY}/vllm-openai:latest" -n "$NAMESPACE"
+kubectl set image deployment/vllm vllm="${REGISTRY}/vllm-openai:${VLLM_TAG}" -n "$NAMESPACE"
 
 # 12. Apply GCP GPU patch for vLLM
 echo "Applying GPU tolerations and nodeSelector to vLLM..."

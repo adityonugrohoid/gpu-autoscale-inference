@@ -11,10 +11,10 @@ spec:
       restartPolicy: Never
       containers:
         - name: model-downloader
-          image: python:3.11-slim
+          image: python:3.12-slim
           command: ["sh", "-c"]
           args:
-            - "pip install huggingface_hub -q && python3 -c \"from huggingface_hub import snapshot_download; snapshot_download('Qwen/Qwen2.5-1.5B-Instruct')\""
+            - "pip install huggingface_hub==1.9.0 -q && python3 -c \"from huggingface_hub import snapshot_download; snapshot_download('Qwen/Qwen2.5-1.5B-Instruct')\""
           env:
             - name: HF_HOME
               value: /root/.cache/huggingface

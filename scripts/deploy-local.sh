@@ -30,7 +30,7 @@ if ! kubectl get namespace keda &>/dev/null; then
   echo "Installing KEDA..."
   helm repo add kedacore https://kedacore.github.io/charts 2>/dev/null || true
   helm repo update
-  helm install keda kedacore/keda --namespace keda --create-namespace --wait
+  helm install keda kedacore/keda --version 2.19.0 --namespace keda --create-namespace --wait
 else
   echo "KEDA already installed, skipping."
 fi
@@ -39,7 +39,7 @@ fi
 if ! kubectl get deployment kube-state-metrics -n kube-system &>/dev/null; then
   echo "Installing kube-state-metrics..."
   helm repo add prometheus-community https://prometheus-community.github.io/helm-charts 2>/dev/null || true
-  helm install kube-state-metrics prometheus-community/kube-state-metrics --namespace kube-system --wait
+  helm install kube-state-metrics prometheus-community/kube-state-metrics --version 7.2.2 --namespace kube-system --wait
 else
   echo "kube-state-metrics already installed, skipping."
 fi
@@ -74,5 +74,5 @@ echo "Prometheus: kubectl port-forward svc/prometheus 9090:9090 -n $NAMESPACE"
 echo ""
 echo "NOTE: Start vLLM separately on the host:"
 echo "  docker run --gpus all -p 8000:8000 --ipc=host \\"
-echo "    vllm/vllm-openai --model Qwen/Qwen2.5-1.5B-Instruct \\"
+echo "    vllm/vllm-openai:v0.19.0 --model Qwen/Qwen2.5-1.5B-Instruct \\"
 echo "    --max-model-len 4096 --gpu-memory-utilization 0.8 --enforce-eager"
