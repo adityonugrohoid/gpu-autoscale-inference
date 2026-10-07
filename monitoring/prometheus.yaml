@@ -81,7 +81,7 @@ spec:
       serviceAccountName: prometheus
       containers:
         - name: prometheus
-          image: prom/prometheus:latest
+          image: prom/prometheus:v3.11.0
           ports:
             - containerPort: 9090
           volumeMounts:
@@ -488,7 +488,7 @@ spec:
     spec:
       containers:
         - name: grafana
-          image: grafana/grafana:latest
+          image: grafana/grafana:12.4.2
           ports:
             - containerPort: 3000
           env:
@@ -510,7 +510,7 @@ spec:
             - name: dashboards
               mountPath: /var/lib/grafana/dashboards
         - name: renderer
-          image: grafana/grafana-image-renderer:latest
+          image: grafana/grafana-image-renderer:v5.7.3
           ports:
             - containerPort: 8081
       volumes:

@@ -14,11 +14,11 @@ spec:
     spec:
       containers:
         - name: redis
-          image: redis:7-alpine
+          image: redis:7.4.8-alpine
           ports:
             - containerPort: 6379
         - name: redis-exporter
-          image: oliver006/redis_exporter:latest
+          image: oliver006/redis_exporter:v1.82.0
           ports:
             - containerPort: 9121
           env:

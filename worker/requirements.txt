@@ -1,3 +1,3 @@
-redis
-httpx
-python-dotenv
+redis==7.4.0
+httpx==0.28.1
+python-dotenv==1.2.2

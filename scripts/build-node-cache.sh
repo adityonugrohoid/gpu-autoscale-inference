@@ -7,6 +7,8 @@ set -euo pipefail
 PROJECT="${GCP_PROJECT:?set GCP_PROJECT to your GCP project id}"
 REGION="us-east1"
 REGISTRY="us-docker.pkg.dev/${PROJECT}/llm-gateway"
+# Keep in step with VLLM_TAG in scripts/deploy-gcp.sh
+VLLM_TAG="v0.19.0"
 DISK_NAME="vllm-node-cache-$(date +%Y%m%d)"
 DISK_SIZE_GB=50
 LOG_BUCKET="gs://${PROJECT}-node-cache-logs"
@@ -38,9 +40,9 @@ gcloud storage buckets create "$LOG_BUCKET" \
 # Builder VM uses ServiceAccountToken auth - needs image in AR, not Docker Hub
 echo "Pushing vLLM base image to Artifact Registry..."
 gcloud auth print-access-token | docker login -u oauth2accesstoken --password-stdin us-docker.pkg.dev
-docker pull vllm/vllm-openai:latest
-docker tag vllm/vllm-openai:latest "${REGISTRY}/vllm-openai:latest"
-docker push "${REGISTRY}/vllm-openai:latest"
+docker pull "vllm/vllm-openai:${VLLM_TAG}"
+docker tag "vllm/vllm-openai:${VLLM_TAG}" "${REGISTRY}/vllm-openai:${VLLM_TAG}"
+docker push "${REGISTRY}/vllm-openai:${VLLM_TAG}"
 
 # 4. Clone ai-on-gke tools (sparse checkout - builder only)
 TOOLS_DIR=$(mktemp -d)
@@ -59,7 +61,7 @@ go run ./cli \
   --zone="${REGION}-a" \
   --gcs-path="$LOG_BUCKET" \
   --disk-size-gb="$DISK_SIZE_GB" \
-  --container-image="${REGISTRY}/vllm-openai:latest" \
+  --container-image="${REGISTRY}/vllm-openai:${VLLM_TAG}" \
   --timeout=40m \
   --image-pull-auth=ServiceAccountToken
 
