@@ -37,7 +37,7 @@
 
 ## Features
 
-An LLM inference platform with fully elastic GPU provisioning. Requests are queued in Redis; when queue depth crosses a threshold, KEDA triggers event-driven pod autoscaling from zero replicas. On GKE, the Cluster Autoscaler provisions a GPU node in response to pending pods with `nvidia.com/gpu` resource requests, achieving true scale-to-zero at both the pod and node level. vLLM serves inference with continuous batching, model weights persisted on a PersistentVolumeClaim, and container image layers pre-cached via GKE Secondary Boot Disk to cut cold start.
+An LLM inference platform whose core design decision is two independent autoscaling layers: KEDA scales pods on Redis queue depth, and the GKE Cluster Autoscaler scales the GPU node on pending pods, so idle cost is zero at both levels. Every request waits in the Redis queue; KEDA starts the worker and vLLM pods from zero replicas once queue depth crosses a threshold, and the pending vLLM pod's `nvidia.com/gpu` request is what brings up the GPU node. vLLM serves inference with continuous batching. Cold start is the price of scale-to-zero; measured on T4 Spot it went from about 11 min to about 5.6 min after moving weights to a PVC and pre-caching the image on a GKE secondary boot disk.
 
 - **Scale-to-zero GPU nodes** - Cluster Autoscaler provisions and deprovisions GPU VMs based on pending pod scheduling; $0/hr when idle
 - **Event-driven pod autoscaling** - KEDA ScaledObjects watch Redis queue depth, scaling worker and vLLM Deployments between 0 and N replicas
@@ -413,7 +413,7 @@ Further reduction requires either GPU-aware node warming (a min-1 idle GPU node,
 
 | Metric | Value | Notes |
 |---|---|---|
-| Cold start (queue to vLLM ready) | **595s** | inflated by mid-run Spot preemption + recovery |
+| Cold start (queue to vLLM ready) | **595s** | inflated by the mid-run Spot node loss and recovery |
 | Warm continuous load (889 reqs @ 5 r/s) | **306s** | fire + drain, no backlog |
 | Pods to 0 after queue idle | **~5m44s** | KEDA cooldown |
 | GPU node to 0 after pods zero | **~10m24s** | Cluster Autoscaler scale-down delay |
@@ -434,8 +434,8 @@ Two phases (translucent blue regions) and three event lines tell the full story.
 - 873 requests fired at 5 req/s for 180s, then the queue holds while the system cold-starts from zero
 - KEDA scales worker 0 to 1 to 2 and vLLM 0 to 1 within ~30s of the queue threshold breach
 - Cluster Autoscaler provisions the GPU node (~2.5 min); the image loads from Secondary Boot Disk (~7s); the model loads from PVC into VRAM (about 2.5 min)
-- First completions at T+576s; queue drains by T+595s
-- Real-world resilience event: a Spot preemption hit at T+332s mid-cold-start. KEDA plus Cluster Autoscaler self-healed in 105s without manual intervention or lost requests (see the self-heal screenshot below)
+- First completions at T+576s and vLLM ready at T+595s; the queue drains to zero by T+884s
+- Real-world failure: mid-cold-start the Spot GPU node dropped out (vLLM killed at T+264s). The same node rejoined the cluster 108s later, vLLM was serving at T+595s, and the queue held all 873 jobs through the gap (see the self-heal screenshot below)
 
 **Valley - 60s baseline pause**
 - Queue at 0; pods and GPU node remain warm
@@ -454,7 +454,7 @@ Two phases (translucent blue regions) and three event lines tell the full story.
 
 ![KEDA + Cluster Autoscaler self-heal after Spot preemption](docs/LLM%20Gateway%20-%20KEDA+CA%20self-heal.png)
 
-Mid-cold-start at T+332s, GCP reclaimed the Spot GPU node. KEDA detected the lost vLLM and worker pods, the Cluster Autoscaler provisioned a replacement node, and vLLM cold-started a second time, all within 105s. The Redis queue absorbed the gap; no requests were dropped, no client retry logic was needed. The two-layer autoscaler design (KEDA for pods, Cluster Autoscaler for nodes) is what makes this kind of failure self-healing rather than fatal.
+Mid-cold-start, the Spot GPU node dropped out. At T+264s (12:05:05Z) the vLLM and DCGM exporter containers on it were killed, and by T+369s the cluster counted zero GPU nodes. No Preempted event was captured, so a Spot reclaim is inferred, not logged. GCE recreated the instance: the same node, `gke-llm-gateway-gpu-pool-016163f0-6r8w`, rejoined the cluster at 12:06:53Z, 108s after the containers stopped (the self-heal panel shows about 105s), and was Ready by 12:07:55Z, when the replacement vLLM pod was scheduled on it. The Cluster Autoscaler logged no new scale-up after 12:01:20Z; the vLLM Deployment had already created the replacement pod at 12:05:22Z, and it was serving at T+595s. The Redis queue held all 873 jobs through the gap and drained to zero by T+884s. The queue in front of the GPU tier is what let the jobs wait out the lost node.
 
 ## Project Structure
 
