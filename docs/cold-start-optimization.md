@@ -76,7 +76,7 @@ First deploy only:
 
 Every cold start after:
   GPU node provisions, pulls 8GB vLLM image (~5 min)
-  vLLM pod mounts PVC (weights already there) and loads model in ~30s
+  vLLM pod mounts PVC (weights already there) and loads the model into VRAM in about 2.5 min
 ```
 
 **PVC cost:** ~10GB GCP pd-standard = ~$0.17/month.
@@ -120,7 +120,7 @@ gcloud container node-pools create gpu-pool \
 ```
 
 **Requirements:**
-- GKE 1.30.1-gke.1329000+ (current GKE stable exceeds this)
+- A GKE version with secondary boot disk support (an officially supported GKE feature)
 - Node pool service account needs `roles/artifactregistry.reader`
 - Disk size at least the uncompressed image size: 8GB compressed is ~15-20GB uncompressed, so use 20GB
 - Builder timeout: use `--timeout=40m` (default 20m is insufficient for 8GB image)
