@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+# pre-push hook: enforce branch naming, refuse direct push to main/master
+# unless the remote branch does not exist yet (scaffold push).
+# Installed by claude-ops/templates/install-githooks.sh via core.hooksPath.
+set -euo pipefail
+
+remote="$1"
+branch_pattern='^(feat|fix|docs|refactor|chore|test|perf)/[a-z0-9._-]+$'
+zero='0000000000000000000000000000000000000000'
+
+while read -r local_ref local_sha remote_ref remote_sha; do
+  [[ -z "$local_ref" ]] && continue
+  [[ "$local_sha" == "$zero" ]] && continue   # branch deletion, allowed
+  branch="${remote_ref#refs/heads/}"
+
+  if [[ "$branch" == "main" || "$branch" == "master" ]]; then
+    if [[ "$remote_sha" == "$zero" ]]; then
+      continue   # remote main does not exist: scaffold push
+    fi
+    echo "pre-push: direct push to $branch refused; open a PR" >&2
+    exit 1
+  fi
+
+  if ! [[ "$branch" =~ $branch_pattern ]]; then
+    echo "pre-push: branch name '$branch' does not match <type>/<slug>" >&2
+    echo "  types: feat fix docs refactor chore test perf" >&2
+    exit 1
+  fi
+done
+exit 0
