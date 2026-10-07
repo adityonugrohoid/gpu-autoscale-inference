@@ -1,0 +1,61 @@
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7.0.1
+
+      - uses: actions/setup-python@v7.0.0
+        with:
+          python-version: "3.12"
+
+      - name: Install linters
+        run: pip install yamllint==1.38.0 pyyaml==6.0.3
+
+      - name: yamllint
+        run: yamllint k8s/ k8s-cloud/ monitoring/
+
+      - name: Validate manifests (kubeconform, no cluster)
+        run: |
+          curl -sSL -o kubeconform.tar.gz \
+            https://github.com/yannh/kubeconform/releases/download/v0.8.0/kubeconform-linux-amd64.tar.gz
+          tar xzf kubeconform.tar.gz kubeconform
+          # KEDA ScaledObject schemas come from the CRDs catalog, pinned to a commit
+          ./kubeconform -strict -summary \
+            -schema-location default \
+            -schema-location 'https://raw.githubusercontent.com/datreeio/CRDs-catalog/fd90051867733c60d32d16450556e9cd18459aef/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json' \
+            k8s/ monitoring/
+
+      - name: Compile Python sources
+        run: python -m py_compile gateway/*.py worker/*.py loadtest/locustfile.py
+
+      - name: shellcheck
+        run: shellcheck -S warning scripts/*.sh
+
+      - name: Parse the Grafana dashboard JSON
+        run: |
+          python - <<'EOF'
+          import json
+          import yaml
+
+          found = 0
+          with open("monitoring/prometheus.yaml") as f:
+              for doc in yaml.safe_load_all(f):
+                  if doc and doc.get("kind") == "ConfigMap":
+                      for key, value in doc.get("data", {}).items():
+                          if key.endswith(".json"):
+                              json.loads(value)
+                              found += 1
+          if found == 0:
+              raise SystemExit("no dashboard JSON found in monitoring/prometheus.yaml")
+          print(f"parsed {found} dashboard JSON document(s)")
+          EOF

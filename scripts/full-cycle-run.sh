@@ -81,7 +81,8 @@ ts() {
 }
 
 log() {
-  local msg="[$(ts)] $1"
+  local msg
+  msg="[$(ts)] $1"
   echo "$msg" | tee -a "$MAIN_LOG"
 }
 
